@@ -1,0 +1,12 @@
+{
+  "name": "scibase-knowledge-graph-navigator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scientific knowledge graph extraction, navigation, and recommendation module for SCIBASE issue #17.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/knowledge-graph-navigator.js && node --check scripts/demo.js && node --check test/knowledge-graph-navigator.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/knowledge-graph-navigator.test.js"
+  }
+}

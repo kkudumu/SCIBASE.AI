@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Knowledge Graph Navigator Demo</title>
+  <desc id="desc">Visual demo for scientific entity extraction, graph navigation, entity pages, and recommendations.</desc>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+    .bg { fill: #f7f9fb; }
+    .panel { fill: #fff; stroke: #d6dde8; stroke-width: 2; rx: 8; }
+    .headline { font-size: 34px; font-weight: 700; }
+    .small { font-size: 18px; }
+    .label { font-size: 15px; fill: #596579; }
+    .score { font-size: 38px; font-weight: 700; fill: #1d5f8c; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+  </style>
+  <rect class="bg" width="960" height="540"/>
+  <text x="48" y="64" class="headline">Knowledge Graph Navigator</text>
+  <text x="48" y="96" class="small">Entities · relationships · navigation · recommendations</text>
+  <rect x="48" y="132" width="260" height="150" class="panel"/>
+  <text x="72" y="166" class="label">Entity Types</text>
+  <text x="72" y="214" class="score">9</text>
+  <text x="72" y="250" class="small">projects to funders</text>
+  <rect x="350" y="132" width="260" height="150" class="panel"/>
+  <text x="374" y="166" class="label">Graph Queries</text>
+  <text x="374" y="214" class="score">ready</text>
+  <text x="374" y="250" class="small">type · text · reproducibility</text>
+  <rect x="652" y="132" width="260" height="150" class="panel"/>
+  <text x="676" y="166" class="label">Recommendations</text>
+  <text x="676" y="214" class="score">ranked</text>
+  <text x="676" y="250" class="small">interest + citation signals</text>
+  <rect x="48" y="318" width="864" height="142" class="panel"/>
+  <text x="72" y="354" class="label">Example Journey</text>
+  <text x="72" y="388" class="mono">concept:CRISPR -> project:crispr-neuro-screen -> dataset:crispr-counts</text>
+  <text x="72" y="424" class="mono">Verified projects and entity pages are available through API route contracts.</text>
+</svg>

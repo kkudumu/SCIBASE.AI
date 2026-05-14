@@ -1,0 +1,118 @@
+{
+  "ontology": {
+    "concepts": {
+      "CRISPR": ["CRISPR", "gene editing"],
+      "neuroscience": ["neuroscience", "neural"],
+      "single-cell RNA sequencing": ["single-cell", "scRNA-seq"],
+      "coastal flooding": ["coastal flooding", "flood exposure"],
+      "microbiome": ["microbiome", "microbial diversity"]
+    },
+    "tools": {
+      "Scanpy": ["scanpy"],
+      "Jupyter": ["jupyter", "notebook"],
+      "PyTorch": ["pytorch"],
+      "Docker": ["docker"]
+    }
+  },
+  "projects": [
+    {
+      "id": "flood-microbiome",
+      "title": "Coastal flooding microbiome atlas",
+      "domain": "biology",
+      "year": 2026,
+      "doi": "10.5555/scibase.flood.microbiome",
+      "citationCount": 42,
+      "reproducibility": "verified",
+      "authors": [
+        { "name": "Ada Chen", "affiliation": "Northstar Lab", "orcid": "0000-0001-1111-1111" },
+        { "name": "Ravi Patel", "affiliation": "Open Bio Institute", "orcid": "0000-0002-2222-2222" }
+      ],
+      "funders": ["Northstar Climate Health Fund"],
+      "references": [{ "doi": "10.1038/s41586-020-2649-2" }],
+      "artifacts": [
+        {
+          "id": "dataset-flood-samples",
+          "kind": "dataset",
+          "title": "Flood exposure sample table",
+          "path": "data/samples.csv",
+          "content": "coastal flooding samples with microbial diversity metadata"
+        },
+        {
+          "id": "notebook-flood-analysis",
+          "kind": "notebook",
+          "title": "Jupyter Scanpy analysis",
+          "path": "notebooks/analysis.ipynb",
+          "content": "Jupyter notebook using Scanpy and Docker to reproduce microbiome clusters"
+        },
+        {
+          "id": "protocol-flood-collection",
+          "kind": "protocol",
+          "title": "Flood sampling protocol",
+          "path": "protocols/collection.md",
+          "content": "Protocol for coastal flooding swab collection"
+        }
+      ]
+    },
+    {
+      "id": "crispr-neuro-screen",
+      "title": "CRISPR perturbation map for neural organoids",
+      "domain": "neuroscience",
+      "year": 2026,
+      "doi": "10.5555/scibase.crispr.neuro",
+      "citationCount": 18,
+      "reproducibility": "partial",
+      "authors": [{ "name": "Maya Okafor", "affiliation": "Civic Methods Center" }],
+      "funders": ["Open Neuro Fund"],
+      "references": [{ "doi": "10.1126/science.abc1234" }],
+      "artifacts": [
+        {
+          "id": "dataset-crispr-counts",
+          "kind": "dataset",
+          "title": "CRISPR single-cell count matrix",
+          "path": "data/counts.h5ad",
+          "content": "single-cell RNA sequencing CRISPR neural perturbation counts"
+        },
+        {
+          "id": "notebook-crispr-model",
+          "kind": "notebook",
+          "title": "PyTorch perturbation model",
+          "path": "notebooks/model.ipynb",
+          "content": "PyTorch model for neuroscience CRISPR screen"
+        }
+      ]
+    },
+    {
+      "id": "open-methods-reuse",
+      "title": "Reusable Jupyter protocol patterns for open science",
+      "domain": "methods",
+      "year": 2025,
+      "doi": "10.5555/scibase.open.methods",
+      "citationCount": 9,
+      "reproducibility": "verified",
+      "authors": [{ "name": "Lina Torres", "affiliation": "Open Tooling Lab" }],
+      "funders": ["Open Methods Foundation"],
+      "references": [{ "doi": "10.5281/zenodo.1234567" }],
+      "artifacts": [
+        {
+          "id": "protocol-jupyter-reuse",
+          "kind": "protocol",
+          "title": "Reusable Jupyter analysis protocol",
+          "path": "protocols/jupyter-reuse.md",
+          "content": "Jupyter and Docker protocol for reproducible notebooks"
+        }
+      ]
+    }
+  ],
+  "userProfiles": [
+    {
+      "id": "u-ada",
+      "interests": ["microbiome", "coastal flooding", "Jupyter"],
+      "recentProjects": ["flood-microbiome"]
+    },
+    {
+      "id": "u-maya",
+      "interests": ["CRISPR", "neuroscience", "single-cell RNA sequencing"],
+      "recentProjects": []
+    }
+  ]
+}

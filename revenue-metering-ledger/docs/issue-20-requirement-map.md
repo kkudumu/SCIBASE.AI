@@ -1,6 +1,6 @@
 # Issue #20 Requirement Map
 
-This module is a deterministic milestone for SCIBASE issue #20, Revenue Infrastructure. It focuses on audit-ready pricing, usage metering, top-ups, institutional invoices, entitlement decisions, and anonymized analytics licensing.
+This module is a deterministic milestone for SCIBASE issue #20, Revenue Infrastructure. It focuses on audit-ready pricing, usage metering, top-ups, institutional invoices, entitlement decisions, anonymized analytics licensing, and reconciliation evidence for revenue leakage.
 
 | Issue requirement | Implementation |
 | --- | --- |
@@ -12,6 +12,7 @@ This module is a deterministic milestone for SCIBASE issue #20, Revenue Infrastr
 | Institutional invoices | `buildInvoiceSummary()` combines subscription, usage, top-ups, licensing, tax estimate, total, and audit hash. |
 | Licensing APIs and analytics | `buildLicensingExport()` redacts snapshots to allowed anonymized fields for licensed metadata products. |
 | Revenue health reporting | `buildRevenuePacket()` reports recurring revenue, variable revenue, total due, entitlements, and audit hash. |
+| Revenue reconciliation | `reconcileRevenue()` flags incomplete payment setup, undercharged usage, missing top-up provider metadata, total mismatches, empty licensing exports, and licensing entitlement regressions. |
 | Reviewer demo | `npm run demo` prints a deterministic invoice and entitlement summary for `data/sample-revenue.json`. |
 
 ## Verification

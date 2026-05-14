@@ -13,6 +13,7 @@ The issue asks for subscriptions, usage-based AI compute billing, top-ups, insti
 - Anonymized analytics licensing export that only includes allowed fields.
 - Institutional invoice summary with tax estimate, total due, and audit hash.
 - Entitlement decisions for private projects, institutional admin, licensing API access, overage billing, and top-up credits.
+- Revenue reconciliation findings for payment setup gaps, unbilled usage, top-ups without provider metadata, invoice total mismatches, empty licensing exports, and entitlement regressions.
 - Sample revenue fixture, tests, requirement map, CLI demo, and short demo GIF.
 
 ## Run
@@ -39,6 +40,10 @@ Expected demo shape:
   "entitlements": {
     "canUseInstitutionalAdmin": true,
     "canAccessLicensingApi": true
+  },
+  "reconciliation": {
+    "status": "pass",
+    "findings": []
   }
 }
 ```
@@ -49,7 +54,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/revenue-ledger.js` - pricing, metering, top-ups, licensing, invoices, and entitlements.
+- `src/revenue-ledger.js` - pricing, metering, top-ups, licensing, invoices, entitlements, and revenue reconciliation.
 - `data/sample-revenue.json` - reviewable catalog/account/usage fixture.
 - `test/revenue-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

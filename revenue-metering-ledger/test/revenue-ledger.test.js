@@ -10,6 +10,7 @@ const {
   buildRevenuePacket,
   evaluateEntitlements,
   meterComputeUsage,
+  reconcileRevenue,
   selectPlan,
 } = require("../src/revenue-ledger");
 
@@ -94,6 +95,62 @@ function testRevenuePacket() {
   assert.ok(packet.revenueHealth.recurringRevenue > 0);
   assert.ok(packet.revenueHealth.variableRevenue > 0);
   assert.strictEqual(packet.revenueHealth.totalDue, packet.invoice.total);
+  assert.strictEqual(packet.reconciliation.status, "pass");
+  assert.deepStrictEqual(packet.reconciliation.findings, []);
+  assert.strictEqual(packet.revenueHealth.reconciliationStatus, "pass");
+}
+
+function testReconciliationFlagsMissingPaymentSetup() {
+  const invoice = buildInvoiceSummary(
+    sample.catalog,
+    {
+      ...sample.account,
+      billingProvider: "paypal",
+      paymentProfile: { payerId: "payer-123" },
+    },
+    sample.usageEvents,
+    sample.topUpPurchases,
+    sample.analyticsSnapshot,
+  );
+  const reconciliation = reconcileRevenue(invoice, evaluateEntitlements(invoice));
+
+  assert.strictEqual(reconciliation.status, "review");
+  assert.ok(reconciliation.findings.some((finding) => finding.code === "PAYMENT_SETUP_INCOMPLETE"));
+}
+
+function testReconciliationFlagsInvoiceMismatch() {
+  const invoice = buildInvoiceSummary(
+    sample.catalog,
+    sample.account,
+    sample.usageEvents,
+    sample.topUpPurchases,
+    sample.analyticsSnapshot,
+  );
+  const reconciliation = reconcileRevenue(
+    {
+      ...invoice,
+      total: invoice.total + 10,
+    },
+    evaluateEntitlements(invoice),
+  );
+
+  assert.strictEqual(reconciliation.status, "review");
+  assert.ok(reconciliation.findings.some((finding) => finding.code === "INVOICE_TOTAL_MISMATCH"));
+}
+
+function testReconciliationFlagsLicensingAndTopUpGaps() {
+  const invoice = buildInvoiceSummary(
+    sample.catalog,
+    sample.account,
+    sample.usageEvents,
+    [{ id: "topup-002", packId: "compute-100", quantity: 1 }],
+    { privateProjectTitles: ["not allowed"] },
+  );
+  const reconciliation = reconcileRevenue(invoice, evaluateEntitlements(invoice));
+
+  assert.strictEqual(reconciliation.status, "review");
+  assert.ok(reconciliation.findings.some((finding) => finding.code === "TOP_UP_WITHOUT_PROVIDER"));
+  assert.ok(reconciliation.findings.some((finding) => finding.code === "LICENSING_EXPORT_EMPTY"));
 }
 
 testPlanSelection();
@@ -103,5 +160,8 @@ testLicensingExportRedactsPrivateFields();
 testPaymentIntegrationReadiness();
 testInvoiceAndEntitlements();
 testRevenuePacket();
+testReconciliationFlagsMissingPaymentSetup();
+testReconciliationFlagsInvoiceMismatch();
+testReconciliationFlagsLicensingAndTopUpGaps();
 
 console.log("revenue-metering-ledger tests passed");

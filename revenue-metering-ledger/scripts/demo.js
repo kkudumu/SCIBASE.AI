@@ -22,6 +22,7 @@ console.log(
       licensingMonthly: packet.invoice.licensing.monthlyAmount,
       invoiceTotal: packet.invoice.total,
       entitlements: packet.entitlements,
+      reconciliation: packet.reconciliation,
       auditHash: packet.revenueHealth.auditHash,
     },
     null,

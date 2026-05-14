@@ -103,7 +103,7 @@ function applyTopUps(catalogInput, account, purchases) {
       packId: pack.id,
       credits: Number(pack.credits || 0) * quantity,
       amount: money(Number(pack.price || 0) * quantity),
-      provider: purchase.provider || "stripe",
+      provider: purchase.provider || null,
       ledgerHash: hashRecord({ purchase, pack, accountId: account.id }),
     };
   });
@@ -192,6 +192,82 @@ function evaluateEntitlements(invoice) {
   };
 }
 
+function addFinding(findings, code, message, evidence) {
+  findings.push({
+    code,
+    severity: code === "INVOICE_TOTAL_MISMATCH" ? "high" : "medium",
+    message,
+    evidence: evidence || {},
+  });
+}
+
+function reconcileRevenue(invoice, entitlements) {
+  const findings = [];
+  const expectedSubtotal = money(
+    invoice.plan.total
+      + invoice.usage.billableUsage
+      + invoice.topUps.reduce((sum, topUp) => sum + Number(topUp.amount || 0), 0)
+      + invoice.licensing.monthlyAmount,
+  );
+  const expectedTotal = money(invoice.subtotal + invoice.taxEstimate);
+
+  if (!invoice.paymentReadiness.ready) {
+    addFinding(findings, "PAYMENT_SETUP_INCOMPLETE", "Billing provider profile is missing required metadata.", {
+      provider: invoice.paymentReadiness.provider,
+      missingFields: invoice.paymentReadiness.missingFields,
+    });
+  }
+
+  if (invoice.usage.grossUsage > invoice.usage.includedComputeCredits && invoice.usage.billableUsage === 0) {
+    addFinding(findings, "USAGE_UNDERCHARGED", "Usage exceeded included credits but no overage was billed.", {
+      grossUsage: invoice.usage.grossUsage,
+      includedComputeCredits: invoice.usage.includedComputeCredits,
+      billableUsage: invoice.usage.billableUsage,
+    });
+  }
+
+  for (const topUp of invoice.topUps) {
+    if (!topUp.provider) {
+      addFinding(findings, "TOP_UP_WITHOUT_PROVIDER", "Top-up ledger entry is missing payment provider metadata.", {
+        purchaseId: topUp.purchaseId,
+        packId: topUp.packId,
+      });
+    }
+  }
+
+  if (expectedSubtotal !== invoice.subtotal || expectedTotal !== invoice.total) {
+    addFinding(findings, "INVOICE_TOTAL_MISMATCH", "Invoice total does not reconcile to component charges and tax.", {
+      expectedSubtotal,
+      actualSubtotal: invoice.subtotal,
+      expectedTotal,
+      actualTotal: invoice.total,
+    });
+  }
+
+  if (invoice.licensing.products.length > 0 && Object.keys(invoice.licensing.redactedSnapshot).length === 0) {
+    addFinding(findings, "LICENSING_EXPORT_EMPTY", "Licensed analytics products produced an empty redacted export.", {
+      productIds: invoice.licensing.products.map((product) => product.id),
+    });
+  }
+
+  if (invoice.licensing.products.length > 0 && entitlements && !entitlements.canAccessLicensingApi) {
+    addFinding(findings, "ENTITLEMENT_REGRESSION", "Licensed analytics products are present but licensing API access is disabled.", {
+      productIds: invoice.licensing.products.map((product) => product.id),
+    });
+  }
+
+  return {
+    status: findings.length === 0 ? "pass" : "review",
+    findings,
+    reconciliationHash: hashRecord({
+      invoiceId: invoice.invoiceId,
+      findings,
+      subtotal: invoice.subtotal,
+      total: invoice.total,
+    }),
+  };
+}
+
 function buildRevenuePacket(catalogInput, account, usageEvents, topUpPurchases, analyticsSnapshot) {
   const invoice = buildInvoiceSummary(
     catalogInput,
@@ -200,14 +276,18 @@ function buildRevenuePacket(catalogInput, account, usageEvents, topUpPurchases, 
     topUpPurchases,
     analyticsSnapshot,
   );
+  const entitlements = evaluateEntitlements(invoice);
+  const reconciliation = reconcileRevenue(invoice, entitlements);
   return {
     invoice,
-    entitlements: evaluateEntitlements(invoice),
+    entitlements,
+    reconciliation,
     revenueHealth: {
       recurringRevenue: money(invoice.plan.total + invoice.licensing.monthlyAmount),
       variableRevenue: money(invoice.usage.billableUsage + invoice.topUps.reduce((sum, topUp) => sum + topUp.amount, 0)),
       totalDue: invoice.total,
       auditHash: invoice.auditHash,
+      reconciliationStatus: reconciliation.status,
     },
   };
 }
@@ -222,5 +302,6 @@ module.exports = {
   hashRecord,
   meterComputeUsage,
   normalizeCatalog,
+  reconcileRevenue,
   selectPlan,
 };

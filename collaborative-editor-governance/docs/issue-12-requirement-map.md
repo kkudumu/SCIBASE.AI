@@ -4,7 +4,11 @@ This module is a deterministic milestone for SCIBASE issue #12, Real-time collab
 
 | Issue requirement | Implementation |
 | --- | --- |
-| Scientific document blocks | Blocks include `markdown`, `code`, section IDs, headings, language metadata, and publication outline export. |
+| Scientific document blocks | Blocks include `markdown`, `latex`, `code`, section IDs, headings, language metadata, and publication outline export. |
+| Markdown and LaTeX formatting | `buildScientificFormattingSummary()` reports Markdown blocks and LaTeX/equation support from typed blocks and inline equation syntax. |
+| Reference manager integration | Document references preserve provider metadata such as Zotero/BibTeX source, cited keys, and unresolved citations. |
+| Publication templates | Publication template metadata captures style names and required sections for common journal formats. |
+| Code snippet highlighting | Code blocks carry language metadata and are reported in the scientific formatting summary. |
 | Real-time operation application | `applyOperation()` and `applyOperationBatch()` deterministically apply insert, update, delete, comment, suggestion, and task operations. |
 | Comments and suggestions | Comment and suggestion operations are stored with block links, actor IDs, and open/pending status. |
 | Section locks | `isSectionLocked()` rejects edits from non-owners while allowing the lock owner to edit. |

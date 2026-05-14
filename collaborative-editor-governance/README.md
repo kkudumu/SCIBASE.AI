@@ -6,12 +6,13 @@ The issue asks for a real-time collaborative research editor. This module focuse
 
 ## What It Adds
 
-- Scientific document blocks with Markdown/code metadata and section headings.
+- Scientific document blocks with Markdown, LaTeX, code metadata, references, and section headings.
 - Deterministic operation handling for block inserts, updates, deletes, comments, suggestions, and tasks.
 - Section-lock enforcement that rejects edits from non-owners.
 - Inline comment and suggestion state for peer review.
 - Autosave/version snapshot with content hash and open review counts.
 - Open-task dashboard and collaborator presence summary.
+- Scientific formatting summary covering LaTeX, code highlighting, notebook blocks, reference-provider metadata, citation resolution, and publication templates.
 - Publication outline export with section block types, word counts, and export hash.
 - Sample document fixture, tests, requirement map, CLI demo, and short demo GIF.
 
@@ -32,6 +33,13 @@ Expected demo shape:
   "acceptedOperations": 3,
   "rejectedOperations": 1,
   "readyForSubmission": false,
+  "formatting": {
+    "supportsLatex": true,
+    "referenceManager": {
+      "providers": ["zotero"],
+      "unresolvedCitations": []
+    }
+  },
   "outlineHash": "..."
 }
 ```

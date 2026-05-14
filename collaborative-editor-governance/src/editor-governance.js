@@ -30,6 +30,8 @@ function normalizeDocument(documentInput) {
     tasks: asArray(documentInput.tasks),
     presence: asArray(documentInput.presence),
     versions: asArray(documentInput.versions),
+    references: asArray(documentInput.references),
+    publicationTemplates: asArray(documentInput.publicationTemplates),
   };
 }
 
@@ -168,6 +170,48 @@ function buildPresenceSummary(documentInput) {
   }));
 }
 
+function buildScientificFormattingSummary(documentInput) {
+  const document = normalizeDocument(documentInput);
+  const blocks = document.blocks;
+  const citationKeys = new Set(document.references.map((reference) => reference.key).filter(Boolean));
+  const citedKeys = new Set();
+  const unresolvedCitations = [];
+
+  for (const block of blocks) {
+    const content = String(block.content || "");
+    for (const match of content.matchAll(/@([A-Za-z0-9:_-]+)/g)) {
+      citedKeys.add(match[1]);
+      if (!citationKeys.has(match[1])) unresolvedCitations.push(match[1]);
+    }
+  }
+
+  const blockTypes = new Set(blocks.map((block) => block.type));
+  const hasLatex = blocks.some((block) => block.type === "latex" || /\$[^$]+\$/.test(String(block.content || "")));
+  const hasCodeHighlighting = blocks.some((block) => block.type === "code" && block.metadata.language);
+  const hasNotebook = blocks.some((block) => block.type === "notebook-cell");
+  const templates = document.publicationTemplates.map((template) => ({
+    id: template.id,
+    name: template.name || template.id,
+    style: template.style || "generic",
+    requiredSections: asArray(template.requiredSections),
+  }));
+
+  return {
+    markdownBlocks: blocks.filter((block) => block.type === "markdown").length,
+    supportsLatex: hasLatex,
+    supportsCodeHighlighting: hasCodeHighlighting,
+    supportsNotebookCells: hasNotebook,
+    blockTypes: [...blockTypes].sort(),
+    referenceManager: {
+      totalReferences: document.references.length,
+      providers: [...new Set(document.references.map((reference) => reference.provider || "manual"))].sort(),
+      citedKeys: [...citedKeys].sort(),
+      unresolvedCitations: [...new Set(unresolvedCitations)].sort(),
+    },
+    publicationTemplates: templates,
+  };
+}
+
 function buildReviewDashboard(documentInput) {
   const document = normalizeDocument(documentInput);
   const sectionMap = new Map();
@@ -199,6 +243,7 @@ function buildReviewDashboard(documentInput) {
     title: document.title,
     sections: [...sectionMap.values()],
     presence: buildPresenceSummary(document),
+    formatting: buildScientificFormattingSummary(document),
     openTasks: document.tasks.filter((task) => task.status !== "done"),
     readyForSubmission:
       document.comments.every((comment) => comment.status !== "open") &&
@@ -246,6 +291,7 @@ function buildCollaborativeEditorPacket(documentInput, operations) {
     document: documentWithSnapshot,
     snapshot,
     dashboard: buildReviewDashboard(documentWithSnapshot),
+    formatting: buildScientificFormattingSummary(documentWithSnapshot),
     outline: exportPublicationOutline(documentWithSnapshot),
   };
 }
@@ -256,6 +302,7 @@ module.exports = {
   buildCollaborativeEditorPacket,
   buildPresenceSummary,
   buildReviewDashboard,
+  buildScientificFormattingSummary,
   createVersionSnapshot,
   exportPublicationOutline,
   hashRecord,

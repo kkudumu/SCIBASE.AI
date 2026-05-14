@@ -13,6 +13,7 @@ console.log(
       rejectedOperations: packet.operationResults.filter((result) => !result.accepted).length,
       snapshot: packet.snapshot,
       readyForSubmission: packet.dashboard.readyForSubmission,
+      formatting: packet.formatting,
       sections: packet.dashboard.sections,
       outlineHash: packet.outline.exportHash,
     },

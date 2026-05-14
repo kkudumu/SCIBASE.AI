@@ -7,6 +7,7 @@ const {
   applyOperationBatch,
   buildCollaborativeEditorPacket,
   buildReviewDashboard,
+  buildScientificFormattingSummary,
   createVersionSnapshot,
   exportPublicationOutline,
   isSectionLocked,
@@ -54,12 +55,25 @@ function testPublicationOutline() {
   assert.ok(outline.exportHash.length >= 12);
 }
 
+function testScientificFormattingSummary() {
+  const summary = buildScientificFormattingSummary(sample.document);
+
+  assert.strictEqual(summary.supportsLatex, true);
+  assert.strictEqual(summary.supportsCodeHighlighting, true);
+  assert.ok(summary.blockTypes.includes("latex"));
+  assert.strictEqual(summary.referenceManager.totalReferences, 1);
+  assert.deepStrictEqual(summary.referenceManager.citedKeys, ["smith2026"]);
+  assert.deepStrictEqual(summary.referenceManager.unresolvedCitations, []);
+  assert.strictEqual(summary.publicationTemplates[0].style, "nature");
+}
+
 function testFullPacket() {
   const packet = buildCollaborativeEditorPacket(sample.document, sample.operations);
 
   assert.strictEqual(packet.operationResults.length, 4);
   assert.strictEqual(packet.document.versions.length, 1);
   assert.strictEqual(packet.dashboard.openTasks.length, 1);
+  assert.strictEqual(packet.dashboard.formatting.supportsLatex, true);
   assert.ok(packet.outline.exportHash);
 }
 
@@ -68,6 +82,7 @@ testApplyOperationRejectsLockedEdit();
 testOperationBatch();
 testSnapshotAndDashboard();
 testPublicationOutline();
+testScientificFormattingSummary();
 testFullPacket();
 
 console.log("collaborative-editor-governance tests passed");

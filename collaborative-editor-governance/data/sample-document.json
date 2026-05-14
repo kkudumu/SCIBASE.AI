@@ -19,8 +19,15 @@
         "id": "block-methods",
         "sectionId": "methods",
         "type": "markdown",
-        "content": "Samples were collected monthly and sequenced with a documented protocol.",
+        "content": "Samples were collected monthly and sequenced with a documented protocol @smith2026.",
         "metadata": { "heading": "Methods" }
+      },
+      {
+        "id": "block-equation",
+        "sectionId": "methods",
+        "type": "latex",
+        "content": "$H = -\\sum_i p_i \\log(p_i)$",
+        "metadata": { "label": "eq:diversity" }
       },
       {
         "id": "block-code",
@@ -52,6 +59,22 @@
         "sectionId": "methods",
         "cursorBlockId": "block-methods",
         "lastSeenAt": "2026-05-14T07:00:00Z"
+      }
+    ],
+    "references": [
+      {
+        "key": "smith2026",
+        "provider": "zotero",
+        "title": "Flooding exposure sequencing protocol",
+        "doi": "10.5555/example"
+      }
+    ],
+    "publicationTemplates": [
+      {
+        "id": "nature-methods",
+        "name": "Nature Methods",
+        "style": "nature",
+        "requiredSections": ["abstract", "methods", "results", "references"]
       }
     ],
     "versions": []

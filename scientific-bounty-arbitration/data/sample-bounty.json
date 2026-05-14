@@ -1,0 +1,97 @@
+{
+  "challenge": {
+    "id": "challenge-climate-forecast",
+    "title": "Regional flood-risk forecasting model",
+    "sponsorId": "sponsor-climate-lab",
+    "problemDescription": "Develop a reproducible model that forecasts regional flood-risk windows using public rainfall and river-gauge data.",
+    "scientificContext": "Climate nonprofits need faster ways to compare model outputs and award teams that produce reproducible forecasts.",
+    "deliverables": [
+      { "id": "model", "title": "Working forecasting model", "required": true },
+      { "id": "dataset", "title": "Cleaned public dataset", "required": true },
+      { "id": "whitepaper", "title": "Methodology whitepaper", "required": true },
+      { "id": "demo", "title": "Short model walkthrough", "required": false }
+    ],
+    "rubric": [
+      { "id": "accuracy", "label": "Forecast accuracy", "weight": 40, "deliverableId": "model" },
+      { "id": "reproducibility", "label": "Reproducibility", "weight": 30, "deliverableId": "dataset" },
+      { "id": "clarity", "label": "Scientific clarity", "weight": 20, "deliverableId": "whitepaper" },
+      { "id": "impact", "label": "Sponsor impact", "weight": 10 }
+    ],
+    "timeline": {
+      "opensAt": "2026-05-01",
+      "prototypeDueAt": "2026-06-01",
+      "finalDueAt": "2026-07-01"
+    },
+    "prize": {
+      "amount": 1000,
+      "currency": "USD",
+      "milestones": [
+        { "label": "prototype accepted", "percent": 30 },
+        { "label": "final award", "percent": 70 }
+      ]
+    },
+    "ipPolicy": {
+      "defaultOwner": "solver",
+      "transferOnPayout": true,
+      "licenseBeforePayout": "evaluation-only"
+    },
+    "participation": {
+      "visibility": "public",
+      "anonymousAllowed": true,
+      "ndaRequired": false
+    }
+  },
+  "submission": {
+    "id": "submission-riverwatch",
+    "teamId": "team-riverwatch",
+    "teamMembers": ["researcher-1", "researcher-2"],
+    "anonymous": false,
+    "teamSplits": [
+      { "payeeId": "researcher-1", "percent": 0.6 },
+      { "payeeId": "researcher-2", "percent": 0.4 }
+    ],
+    "artifacts": [
+      { "id": "artifact-model", "deliverableId": "model", "uri": "ipfs://model", "version": "1.0.0" },
+      { "id": "artifact-data", "deliverableId": "dataset", "uri": "ipfs://dataset", "version": "1.0.0" },
+      { "id": "artifact-whitepaper", "deliverableId": "whitepaper", "uri": "ipfs://whitepaper", "version": "1.0.0" }
+    ],
+    "auditTrail": [
+      { "action": "workspace-created", "actor": "researcher-1" },
+      { "action": "artifact-submitted", "actor": "researcher-2" }
+    ]
+  },
+  "reviewers": [
+    {
+      "id": "reviewer-a",
+      "name": "Independent hydrology reviewer",
+      "affiliations": ["university-water-center"],
+      "collaborators": []
+    },
+    {
+      "id": "reviewer-b",
+      "name": "Open data reviewer",
+      "affiliations": ["open-data-lab"],
+      "collaborators": []
+    },
+    {
+      "id": "reviewer-c",
+      "name": "Conflicted sponsor reviewer",
+      "affiliations": ["sponsor-climate-lab"],
+      "collaborators": []
+    }
+  ],
+  "reviews": [
+    {
+      "reviewerId": "reviewer-a",
+      "scores": { "accuracy": 86, "reproducibility": 90, "clarity": 82, "impact": 88 }
+    },
+    {
+      "reviewerId": "reviewer-b",
+      "scores": { "accuracy": 84, "reproducibility": 92, "clarity": 85, "impact": 91 }
+    },
+    {
+      "reviewerId": "reviewer-c",
+      "scores": { "accuracy": 100, "reproducibility": 100, "clarity": 100, "impact": 100 }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "scibase-scientific-bounty-arbitration",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scientific bounty arbitration and payout readiness module for SCIBASE issue #18.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/arbitration.js && node --check scripts/demo.js && node --check test/arbitration.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/arbitration.test.js"
+  }
+}

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Repository Integrity Ledger Demo</title>
+  <desc id="desc">Visual demo for scientific repository manifests, commits, reproducibility, citations, and export bundles.</desc>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+    .bg { fill: #f7f8fb; }
+    .panel { fill: #fff; stroke: #d9dee8; stroke-width: 2; rx: 8; }
+    .headline { font-size: 34px; font-weight: 700; }
+    .small { font-size: 18px; }
+    .label { font-size: 15px; fill: #596579; }
+    .score { font-size: 38px; font-weight: 700; fill: #0f766e; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+  </style>
+  <rect class="bg" width="960" height="540"/>
+  <text x="48" y="64" class="headline">Repository Integrity Ledger</text>
+  <text x="48" y="96" class="small">Manifests · commits · reproducibility · citations · exports</text>
+  <rect x="48" y="132" width="260" height="150" class="panel"/>
+  <text x="72" y="166" class="label">Manifest</text>
+  <text x="72" y="214" class="score">7 / 7</text>
+  <text x="72" y="250" class="small">required components present</text>
+  <rect x="350" y="132" width="260" height="150" class="panel"/>
+  <text x="374" y="166" class="label">Reproducibility</text>
+  <text x="374" y="214" class="score">passed</text>
+  <text x="374" y="250" class="small">Docker run checks passed</text>
+  <rect x="652" y="132" width="260" height="150" class="panel"/>
+  <text x="676" y="166" class="label">Export</text>
+  <text x="676" y="214" class="score">ready</text>
+  <text x="676" y="250" class="small">API + CLI bundle hash</text>
+  <rect x="48" y="318" width="864" height="142" class="panel"/>
+  <text x="72" y="354" class="label">Citation</text>
+  <text x="72" y="388" class="mono">Principal Investigator, Data Analyst (2026). Coastal flooding microbiome atlas...</text>
+  <text x="72" y="424" class="mono">Large data component is flagged for Git LFS-style storage.</text>
+</svg>

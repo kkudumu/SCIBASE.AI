@@ -1,0 +1,84 @@
+{
+  "id": "repo-flood-microbiome",
+  "title": "Coastal flooding microbiome atlas",
+  "metadata": {
+    "doi": "10.5555/scibase.flood.microbiome",
+    "year": 2026,
+    "authors": ["Principal Investigator", "Data Analyst"],
+    "funding": ["Northstar Climate Health Fund"],
+    "tags": ["microbiome", "flooding", "reproducibility"]
+  },
+  "components": [
+    { "id": "c-manuscript", "kind": "manuscript", "path": "manuscript/main.md", "content": "# Coastal flooding microbiome atlas", "sizeBytes": 12000 },
+    { "id": "c-data", "kind": "data", "path": "data/samples.csv", "content": "sample,diversity", "sizeBytes": 25000000 },
+    { "id": "c-code", "kind": "code", "path": "code/analyze.py", "content": "print('analysis')", "sizeBytes": 2000 },
+    { "id": "c-notebook", "kind": "notebooks", "path": "notebooks/run_analysis.ipynb", "content": "{}", "sizeBytes": 8000 },
+    { "id": "c-results", "kind": "results", "path": "results/figure1.png", "content": "binary", "sizeBytes": 400000 },
+    { "id": "c-protocol", "kind": "protocols", "path": "protocols/sequencing.md", "content": "Protocol v2.1", "sizeBytes": 3000 },
+    { "id": "c-metadata", "kind": "metadata", "path": "metadata.json", "content": "{\"doi\":\"10.5555/scibase.flood.microbiome\"}", "sizeBytes": 1000 }
+  ],
+  "commits": [
+    {
+      "id": "commit-1",
+      "parentId": null,
+      "authorId": "u-owner",
+      "message": "Initial repository import",
+      "changedComponents": ["c-manuscript", "c-data", "c-code"],
+      "createdAt": "2026-05-01T00:00:00Z",
+      "commitHash": "initialhash"
+    },
+    {
+      "id": "commit-2",
+      "parentId": "commit-1",
+      "authorId": "u-analyst",
+      "message": "Add reproducibility outputs",
+      "changedComponents": ["c-notebook", "c-results", "c-protocol", "c-metadata"],
+      "createdAt": "2026-05-07T00:00:00Z",
+      "commitHash": "outputhash"
+    }
+  ],
+  "branches": [
+    { "id": "main", "headCommitId": "commit-2" },
+    { "id": "hypothesis-moisture", "headCommitId": "commit-1" }
+  ],
+  "tags": [
+    {
+      "id": "preprint-v1",
+      "version": "preprint-v1.0",
+      "label": "Initial preprint",
+      "commitId": "commit-2",
+      "doi": "10.5555/scibase.flood.microbiome.v1",
+      "tagHash": "taghash"
+    }
+  ],
+  "forks": [
+    {
+      "id": "fork-1",
+      "sourceRepositoryId": "repo-flood-microbiome",
+      "forkRepositoryId": "repo-flood-microbiome-reanalysis",
+      "createdBy": "u-reviewer",
+      "baseCommitId": "commit-2"
+    }
+  ],
+  "mergeRequests": [
+    {
+      "id": "mr-1",
+      "sourceCommitId": "commit-2",
+      "targetCommitId": "commit-1",
+      "changedComponents": [{ "kind": "code", "id": "c-code" }],
+      "reviews": [{ "reviewerId": "u-reviewer", "state": "approved" }],
+      "discussions": [{ "id": "disc-1", "body": "Looks reproducible." }]
+    }
+  ],
+  "reproducibilityRuns": [
+    {
+      "id": "run-1",
+      "environment": "docker://python:3.12",
+      "checks": [
+        { "id": "environment", "status": "passed" },
+        { "id": "notebook-execution", "status": "passed" },
+        { "id": "results-hash", "status": "passed" }
+      ]
+    }
+  ]
+}

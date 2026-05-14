@@ -1,0 +1,12 @@
+{
+  "name": "scibase-repository-integrity-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scientific repository integrity and version-control module for SCIBASE issue #10.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/repository-ledger.js && node --check scripts/demo.js && node --check test/repository-ledger.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/repository-ledger.test.js"
+  }
+}

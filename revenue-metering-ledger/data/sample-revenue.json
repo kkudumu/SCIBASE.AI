@@ -43,6 +43,23 @@
     ],
     "coupons": [
       { "id": "CONSORTIUM10", "percentOff": 0.1 }
+    ],
+    "paymentProviders": [
+      {
+        "id": "stripe",
+        "mode": "card-charge",
+        "requiredFields": ["customerId", "defaultPaymentMethodId"]
+      },
+      {
+        "id": "paypal",
+        "mode": "paypal-agreement",
+        "requiredFields": ["payerId", "billingAgreementId"]
+      },
+      {
+        "id": "institutional-invoice",
+        "mode": "net-30-invoice",
+        "requiredFields": ["billingContactEmail", "purchaseOrderId"]
+      }
     ]
   },
   "account": {
@@ -52,6 +69,10 @@
     "billingCycle": "annual",
     "couponId": "CONSORTIUM10",
     "billingProvider": "institutional-invoice",
+    "paymentProfile": {
+      "billingContactEmail": "ap@northstar.example",
+      "purchaseOrderId": "PO-2026-0142"
+    },
     "taxRate": 0.0825,
     "licensingProductIds": ["metadata-trends"]
   },

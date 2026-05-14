@@ -16,6 +16,7 @@ console.log(
     {
       accountId: packet.invoice.accountId,
       billingProvider: packet.invoice.billingProvider,
+      paymentReadiness: packet.invoice.paymentReadiness,
       planTotal: packet.invoice.plan.total,
       billableUsage: packet.invoice.usage.billableUsage,
       licensingMonthly: packet.invoice.licensing.monthlyAmount,

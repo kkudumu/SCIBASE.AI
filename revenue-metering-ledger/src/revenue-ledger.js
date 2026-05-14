@@ -21,6 +21,7 @@ function normalizeCatalog(catalog) {
     topUpPacks: asArray(catalog && catalog.topUpPacks),
     licensingProducts: asArray(catalog && catalog.licensingProducts),
     coupons: asArray(catalog && catalog.coupons),
+    paymentProviders: asArray(catalog && catalog.paymentProviders),
   };
 }
 
@@ -132,6 +133,28 @@ function buildLicensingExport(catalogInput, account, analyticsSnapshot) {
   };
 }
 
+function buildPaymentIntegrationReadiness(catalogInput, account) {
+  const catalog = normalizeCatalog(catalogInput);
+  const providerId = account.billingProvider || "stripe";
+  const provider = catalog.paymentProviders.find((candidate) => candidate.id === providerId) || {
+    id: providerId,
+    requiredFields: [],
+  };
+  const profile = account.paymentProfile || {};
+  const missingFields = asArray(provider.requiredFields).filter((field) => !profile[field]);
+
+  return {
+    provider: provider.id,
+    mode: provider.mode || "charge",
+    ready: missingFields.length === 0,
+    missingFields,
+    nonSecretProfileHash: hashRecord({
+      provider: provider.id,
+      profile,
+    }),
+  };
+}
+
 function buildInvoiceSummary(catalogInput, account, usageEvents, topUpPurchases, analyticsSnapshot) {
   const catalog = normalizeCatalog(catalogInput);
   const planDecision = selectPlan(catalog, account);
@@ -145,6 +168,7 @@ function buildInvoiceSummary(catalogInput, account, usageEvents, topUpPurchases,
     invoiceId: `${account.id}-${new Date().toISOString().slice(0, 10)}`,
     accountId: account.id,
     billingProvider: account.billingProvider || "stripe",
+    paymentReadiness: buildPaymentIntegrationReadiness(catalog, account),
     plan: planDecision,
     usage,
     topUps,
@@ -192,6 +216,7 @@ module.exports = {
   applyTopUps,
   buildInvoiceSummary,
   buildLicensingExport,
+  buildPaymentIntegrationReadiness,
   buildRevenuePacket,
   evaluateEntitlements,
   hashRecord,

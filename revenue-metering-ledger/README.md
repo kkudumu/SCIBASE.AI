@@ -9,6 +9,7 @@ The issue asks for subscriptions, usage-based AI compute billing, top-ups, insti
 - Tiered plan evaluation with seats, annual discounts, volume discounts, and coupons.
 - AI compute metering for summarization, peer review, and reproducibility checks.
 - Top-up credit ledger entries with provider metadata and hashes.
+- Payment-provider readiness checks for Stripe, PayPal, and institutional invoice profiles using non-secret metadata.
 - Anonymized analytics licensing export that only includes allowed fields.
 - Institutional invoice summary with tax estimate, total due, and audit hash.
 - Entitlement decisions for private projects, institutional admin, licensing API access, overage billing, and top-up credits.
@@ -29,6 +30,10 @@ Expected demo shape:
 {
   "accountId": "acct-northstar-university",
   "billingProvider": "institutional-invoice",
+  "paymentReadiness": {
+    "provider": "institutional-invoice",
+    "ready": true
+  },
   "billableUsage": 85.8,
   "licensingMonthly": 350,
   "entitlements": {

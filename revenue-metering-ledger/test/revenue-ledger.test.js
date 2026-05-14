@@ -6,6 +6,7 @@ const {
   applyTopUps,
   buildInvoiceSummary,
   buildLicensingExport,
+  buildPaymentIntegrationReadiness,
   buildRevenuePacket,
   evaluateEntitlements,
   meterComputeUsage,
@@ -48,6 +49,21 @@ function testLicensingExportRedactsPrivateFields() {
   assert.strictEqual(licensing.redactedSnapshot.privateProjectTitles, undefined);
 }
 
+function testPaymentIntegrationReadiness() {
+  const ready = buildPaymentIntegrationReadiness(sample.catalog, sample.account);
+  const missing = buildPaymentIntegrationReadiness(sample.catalog, {
+    ...sample.account,
+    billingProvider: "paypal",
+    paymentProfile: { payerId: "payer-123" },
+  });
+
+  assert.strictEqual(ready.provider, "institutional-invoice");
+  assert.strictEqual(ready.ready, true);
+  assert.ok(ready.nonSecretProfileHash.length >= 12);
+  assert.strictEqual(missing.ready, false);
+  assert.deepStrictEqual(missing.missingFields, ["billingAgreementId"]);
+}
+
 function testInvoiceAndEntitlements() {
   const invoice = buildInvoiceSummary(
     sample.catalog,
@@ -59,6 +75,7 @@ function testInvoiceAndEntitlements() {
   const entitlements = evaluateEntitlements(invoice);
 
   assert.strictEqual(invoice.billingProvider, "institutional-invoice");
+  assert.strictEqual(invoice.paymentReadiness.ready, true);
   assert.ok(invoice.total > invoice.subtotal);
   assert.strictEqual(entitlements.canUseInstitutionalAdmin, true);
   assert.strictEqual(entitlements.canAccessLicensingApi, true);
@@ -83,6 +100,7 @@ testPlanSelection();
 testUsageMetering();
 testTopUps();
 testLicensingExportRedactsPrivateFields();
+testPaymentIntegrationReadiness();
 testInvoiceAndEntitlements();
 testRevenuePacket();
 

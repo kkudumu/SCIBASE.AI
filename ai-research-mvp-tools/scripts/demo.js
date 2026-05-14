@@ -13,6 +13,14 @@ console.log(
       qualityScore: packet.reviewReport.qualityScore,
       reviewFindings: packet.reviewReport.findings.map((finding) => `${finding.category}:${finding.message}`),
       topCitation: packet.citationRecommendations[0],
+      highlightedCitation: packet.selectionRecommendations[0],
+      citationInsertionPlan: {
+        targetAnchor: packet.citationInsertionPlan.targetAnchor,
+        insertions: packet.citationInsertionPlan.insertions.length,
+        firstDragPayload: packet.citationInsertionPlan.insertions[0]
+          ? packet.citationInsertionPlan.insertions[0].dragPayload
+          : null,
+      },
       similarPapers: packet.similarPapersWidget,
       claimSupport: {
         claims: packet.claimSupportReport.claims.length,

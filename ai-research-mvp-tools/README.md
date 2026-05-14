@@ -12,10 +12,11 @@ The issue asks for paper summaries, pre-review diagnostics, and citation assista
 - Pre-review diagnostics for missing required sections, ethics/data availability gaps, statistical reporting gaps, clarity signals, and similarity evidence.
 - Similarity signal against a local open-access corpus fixture.
 - Citation recommendations ranked by manuscript keyword overlap, recency, and citation signal.
+- Highlighted-text citation recommendations with evidence hashes for selected manuscript spans.
 - Similar-papers widget combining open-access similarity signals and citation-corpus matches with reasons and actions.
 - Claim-support report that extracts manuscript claim sentences, matches citation evidence, and returns insert-or-revise actions with evidence-span hashes.
 - APA, MLA, and Nature-style reference formatting.
-- One-click citation insert-action metadata.
+- One-click citation insert-action metadata plus drag payloads and target anchors for manuscript insertion.
 - Sample manuscript/corpus fixture, tests, requirement map, CLI demo, and short demo GIF.
 
 ## Run
@@ -36,6 +37,13 @@ Expected demo shape:
   "reviewFindings": ["compliance:...", "statistics:..."],
   "topCitation": {
     "doi": "10.1016/j.watres.2025.120001"
+  },
+  "highlightedCitation": {
+    "doi": "10.1016/j.watres.2025.120001"
+  },
+  "citationInsertionPlan": {
+    "targetAnchor": "manuscript:results:p3",
+    "insertions": 2
   },
   "similarPapers": [
     {
@@ -61,7 +69,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/ai-research-mvp-tools.js` - summarization, review diagnostics, similarity, citation ranking, claim support, formatting.
+- `src/ai-research-mvp-tools.js` - summarization, review diagnostics, similarity, citation ranking, highlighted-text citation support, insertion planning, claim support, formatting.
 - `data/sample-research.json` - reviewable manuscript, open-access corpus, and citation corpus fixture.
 - `test/ai-research-mvp-tools.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

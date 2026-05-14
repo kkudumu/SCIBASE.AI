@@ -4,12 +4,14 @@ const assert = require("assert");
 const sample = require("../data/sample-research.json");
 const {
   buildClaimSupportReport,
+  buildCitationInsertionPlan,
   buildSimilarPapersWidget,
   buildResearchToolsPacket,
   detectSimilarity,
   extractClaimSentences,
   formatReference,
   recommendCitations,
+  recommendCitationsForSelection,
   reviewManuscript,
   summarizePaper,
   topKeywords,
@@ -49,6 +51,25 @@ function testSimilarityAndCitations() {
   assert.strictEqual(citations.length, 2);
   assert.notStrictEqual(citations[0].doi, sample.document.references[0].doi);
   assert.ok(citations[0].formatted.includes("https://doi.org/"));
+}
+
+function testHighlightedCitationRecommendationsAndInsertPlan() {
+  const recommendations = recommendCitationsForSelection(
+    sample.highlightedText,
+    sample.citationCorpus,
+    { style: "apa", limit: 2 },
+  );
+  const plan = buildCitationInsertionPlan(sample.document, recommendations, {
+    targetAnchor: sample.targetAnchor,
+  });
+
+  assert.strictEqual(recommendations.length, 2);
+  assert.strictEqual(recommendations[0].doi, "10.1016/j.watres.2025.120001");
+  assert.ok(recommendations[0].highlightedTextHash.length >= 12);
+  assert.strictEqual(plan.targetAnchor, "manuscript:results:p3");
+  assert.strictEqual(plan.insertions[0].mode, "one-click");
+  assert.strictEqual(plan.insertions[0].dragPayload.mimeType, "application/x-scibase-citation");
+  assert.ok(plan.planHash.length >= 12);
 }
 
 function testSimilarPapersWidget() {
@@ -91,6 +112,9 @@ function testPacket() {
 
   assert.deepStrictEqual(Object.keys(packet.summaries), ["abstract", "executive", "layperson"]);
   assert.strictEqual(packet.citationRecommendations.length, packet.insertActions.length);
+  assert.ok(packet.selectionRecommendations.length > 0);
+  assert.strictEqual(packet.citationInsertionPlan.targetAnchor, sample.targetAnchor);
+  assert.strictEqual(packet.citationInsertionPlan.insertions.length, packet.citationRecommendations.length);
   assert.ok(packet.similarPapersWidget.length > 0);
   assert.ok(packet.claimSupportReport.claims.length > 0);
   assert.ok(packet.claimSupportReport.reportHash.length >= 12);
@@ -101,6 +125,7 @@ function testPacket() {
 testSummaries();
 testReviewDiagnostics();
 testSimilarityAndCitations();
+testHighlightedCitationRecommendationsAndInsertPlan();
 testSimilarPapersWidget();
 testClaimSupportReport();
 testReferenceFormatting();

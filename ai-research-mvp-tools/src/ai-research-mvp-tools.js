@@ -268,6 +268,28 @@ function recommendCitations(documentInput, citationCorpus = [], options = {}) {
     .slice(0, options.limit || 5);
 }
 
+function recommendCitationsForSelection(highlightedText, citationCorpus = [], options = {}) {
+  const selectionKeywords = new Set(topKeywords(highlightedText, 12));
+  return asArray(citationCorpus)
+    .map((candidate) => {
+      const candidateKeywords = new Set(tokenize(`${candidate.title || ""} ${candidate.abstract || ""}`));
+      const overlap = Array.from(selectionKeywords).filter((keyword) => candidateKeywords.has(keyword));
+      const score = Number((overlap.length * 5 + Math.min(6, Number(candidate.citations || 0) / 35)).toFixed(4));
+      return {
+        id: candidate.id,
+        title: candidate.title,
+        doi: candidate.doi,
+        score,
+        matchedTerms: overlap,
+        formatted: formatReference(candidate, options.style || "apa"),
+        highlightedTextHash: hashRecord({ highlightedText, doi: candidate.doi }),
+      };
+    })
+    .filter((candidate) => candidate.score > 0)
+    .sort((left, right) => right.score - left.score || left.title.localeCompare(right.title))
+    .slice(0, options.limit || 3);
+}
+
 function overlapTerms(left, right) {
   const leftTokens = new Set(tokenize(left));
   const rightTokens = new Set(tokenize(right));
@@ -378,6 +400,34 @@ function buildSimilarPapersWidget(documentInput, openAccessCorpus = [], citation
     .map((item, index) => ({ rank: index + 1, ...item }));
 }
 
+function buildCitationInsertionPlan(documentInput, citationRecommendations = [], options = {}) {
+  const document = normalizeDocument(documentInput);
+  const targetAnchor = options.targetAnchor || "manuscript:end-of-paragraph";
+  const style = options.style || "apa";
+  const insertions = asArray(citationRecommendations).map((citation, index) => ({
+    id: `insert-${index + 1}-${hashRecord({ documentId: document.id, doi: citation.doi }).slice(0, 8)}`,
+    doi: citation.doi,
+    label: citation.formatted || formatReference(citation, style),
+    targetAnchor,
+    mode: options.mode || "one-click",
+    dragPayload: {
+      mimeType: "application/x-scibase-citation",
+      data: {
+        doi: citation.doi,
+        title: citation.title,
+        formatted: citation.formatted || formatReference(citation, style),
+      },
+    },
+  }));
+
+  return {
+    documentId: document.id,
+    targetAnchor,
+    insertions,
+    planHash: hashRecord({ documentId: document.id, targetAnchor, insertions }),
+  };
+}
+
 function formatReference(reference, style = "apa") {
   const authors = asArray(reference.authors).join(", ") || "Unknown authors";
   const year = reference.year || "n.d.";
@@ -400,8 +450,17 @@ function buildResearchToolsPacket(input) {
   };
   const reviewReport = reviewManuscript(document, { domain: document.domain, openAccessCorpus });
   const citationRecommendations = recommendCitations(document, citationCorpus, { style: "apa", limit: 5 });
+  const selectionRecommendations = recommendCitationsForSelection(
+    input.highlightedText || document.body,
+    citationCorpus,
+    { style: "apa", limit: 3 },
+  );
   const similarPapersWidget = buildSimilarPapersWidget(document, openAccessCorpus, citationCorpus, 5);
   const claimSupportReport = buildClaimSupportReport(document, citationCorpus);
+  const citationInsertionPlan = buildCitationInsertionPlan(document, citationRecommendations, {
+    targetAnchor: input.targetAnchor || "manuscript:references",
+    mode: "one-click",
+  });
 
   return {
     document: {
@@ -412,8 +471,10 @@ function buildResearchToolsPacket(input) {
     summaries,
     reviewReport,
     citationRecommendations,
+    selectionRecommendations,
     similarPapersWidget,
     claimSupportReport,
+    citationInsertionPlan,
     insertActions: citationRecommendations.map((citation) => ({
       action: "insert-citation",
       doi: citation.doi,
@@ -424,8 +485,10 @@ function buildResearchToolsPacket(input) {
       summaries,
       reviewReport,
       citationRecommendations,
+      selectionRecommendations,
       similarPapersWidget,
       claimSupportReport,
+      citationInsertionPlan,
     }),
   };
 }
@@ -433,6 +496,7 @@ function buildResearchToolsPacket(input) {
 module.exports = {
   REVIEW_TEMPLATES,
   buildClaimSupportReport,
+  buildCitationInsertionPlan,
   buildSimilarPapersWidget,
   buildResearchToolsPacket,
   detectSimilarity,
@@ -440,6 +504,7 @@ module.exports = {
   formatReference,
   hashRecord,
   recommendCitations,
+  recommendCitationsForSelection,
   reviewManuscript,
   summarizePaper,
   topKeywords,

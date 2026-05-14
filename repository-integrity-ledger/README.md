@@ -12,6 +12,7 @@ The issue asks for scientific project repositories with manifests, versioning, f
 - Semantic tags with DOI metadata and citation generation.
 - Fork attribution records preserving source DOI, authors, base commit, and fork hash.
 - Merge-request evaluation for source/target existence, approvals, discussions, and reproducibility blockers.
+- Branch protection report with protected-branch counts, required reviews, required status checks, force-push policy, stale branch detection, and head-commit validation.
 - Editor/diff summary for scientific text, Jupyter notebooks, structured data, code-aware diffs, and rollback commands.
 - Reproducibility run status with environment, check pass rate, and hash.
 - Release readiness packet with required component, semantic tag, DOI, reproducibility, dataset-diff risk, export API, and CLI gates.
@@ -36,6 +37,10 @@ Expected demo shape:
   "lfsComponents": ["data/samples.csv"],
   "reproducibility": "passed",
   "mergeableRequests": 1,
+  "branchProtection": {
+    "protectedBranchCount": 1,
+    "blockedBranchCount": 1
+  },
   "editorModes": ["scientific-text", "structured-data", "code-aware"],
   "rollbackCommand": "scibase restore repo-flood-microbiome --commit commit-2",
   "releaseReadiness": {
@@ -54,7 +59,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/repository-ledger.js` - manifests, commits, tags, forks, merge requests, reproducibility, release readiness, citation, exports.
+- `src/repository-ledger.js` - manifests, commits, tags, forks, merge requests, branch protection, reproducibility, release readiness, citation, exports.
 - `data/sample-repository.json` - reviewable scientific repository fixture.
 - `test/repository-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

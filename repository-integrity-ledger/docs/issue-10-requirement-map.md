@@ -10,6 +10,7 @@ This module is a deterministic milestone for SCIBASE issue #10, Project Reposito
 | Semantic versioning and tags | `createSemanticTag()` attaches semantic tags, DOI metadata, and tag hashes to commits. |
 | Forking and attribution | `buildForkRecord()` records source repository, source DOI, authors, base commit, and fork hash. |
 | Merge requests and review | `evaluateMergeRequest()` checks source/target commits, discussions, approvals, and data-change reproducibility blockers. |
+| Branch protection and review gates | `buildBranchProtectionReport()` reports protected branches, required reviews, required status checks, force-push policy, stale branch blockers, and unknown-head blockers. |
 | In-browser editors and diffs | `buildEditorDiffSummary()` maps components to scientific text, Jupyter notebook, structured-data, code-aware, or hash-only editor/diff modes. |
 | Visual revision timeline and rollback | `buildEditorDiffSummary()` emits a commit rollback timeline with deterministic restore commands. |
 | Reproducibility pipelines | `evaluateReproducibility()` reports execution environment, check pass rate, status, and reproducibility hash. |

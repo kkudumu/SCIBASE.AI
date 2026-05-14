@@ -3,6 +3,7 @@
 const assert = require("assert");
 const repository = require("../data/sample-repository.json");
 const {
+  buildBranchProtectionReport,
   buildComponentManifest,
   buildDatasetDiffSummary,
   buildEditorDiffSummary,
@@ -109,6 +110,36 @@ function testReleaseReadiness() {
   assert.ok(blocked.gates.find((gate) => gate.id === "semantic-tag" && gate.status === "fail"));
 }
 
+function testBranchProtectionReport() {
+  const protection = buildBranchProtectionReport(repository);
+  const main = protection.branches.find((branch) => branch.branchId === "main");
+  const stale = protection.branches.find((branch) => branch.branchId === "hypothesis-moisture");
+  const broken = buildBranchProtectionReport({
+    ...repository,
+    branchProtection: {
+      ...repository.branchProtection,
+      allowForcePushes: true,
+    },
+    branches: [
+      {
+        id: "main",
+        headCommitId: "missing-commit",
+        statusChecks: [{ id: "reproducibility", status: "failed" }],
+      },
+    ],
+  });
+
+  assert.strictEqual(protection.protectedBranchCount, 1);
+  assert.strictEqual(main.status, "ready");
+  assert.strictEqual(main.approvedReviews, 1);
+  assert.strictEqual(stale.status, "blocked");
+  assert.ok(stale.blockers.includes("stale-branch"));
+  assert.ok(broken.branches[0].blockers.includes("unknown-head-commit"));
+  assert.ok(broken.branches[0].blockers.includes("force-pushes-enabled"));
+  assert.ok(broken.branches[0].blockers.includes("required-status-check-failed"));
+  assert.ok(protection.protectionHash.length >= 12);
+}
+
 function testEditorDiffSummary() {
   const summary = buildEditorDiffSummary(repository);
   const dataEditor = summary.componentEditors.find((item) => item.componentId === "c-data");
@@ -127,6 +158,7 @@ function testFullPacket() {
 
   assert.strictEqual(packet.repository.id, repository.id);
   assert.strictEqual(packet.mergeRequests[0].mergeable, true);
+  assert.strictEqual(packet.branchProtection.protectedBranchCount, 1);
   assert.ok(packet.editorDiff.componentEditors.length >= 7);
   assert.ok(packet.citations.apa);
   assert.strictEqual(packet.releaseReadiness.status, "ready");
@@ -140,6 +172,7 @@ testMergeRequestAndReproducibility();
 testCitationAndExport();
 testDatasetDiffSummary();
 testReleaseReadiness();
+testBranchProtectionReport();
 testEditorDiffSummary();
 testFullPacket();
 

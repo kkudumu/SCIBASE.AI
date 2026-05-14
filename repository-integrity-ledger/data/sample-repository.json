@@ -50,8 +50,22 @@
     }
   ],
   "branches": [
-    { "id": "main", "headCommitId": "commit-2" },
-    { "id": "hypothesis-moisture", "headCommitId": "commit-1" }
+    {
+      "id": "main",
+      "headCommitId": "commit-2",
+      "statusChecks": [
+        { "id": "reproducibility", "status": "passed" },
+        { "id": "metadata", "status": "passed" }
+      ]
+    },
+    {
+      "id": "hypothesis-moisture",
+      "headCommitId": "commit-1",
+      "statusChecks": [
+        { "id": "reproducibility", "status": "passed" },
+        { "id": "metadata", "status": "passed" }
+      ]
+    }
   ],
   "tags": [
     {
@@ -75,6 +89,8 @@
   "mergeRequests": [
     {
       "id": "mr-1",
+      "sourceBranchId": "hypothesis-moisture",
+      "targetBranchId": "main",
       "sourceCommitId": "commit-2",
       "targetCommitId": "commit-1",
       "changedComponents": [{ "kind": "code", "id": "c-code" }],
@@ -96,5 +112,13 @@
   "releasePolicy": {
     "requiredTagId": "preprint-v1",
     "datasetRemovalWarnThreshold": 100
+  },
+  "branchProtection": {
+    "asOf": "2026-05-14T00:00:00Z",
+    "protectedBranches": ["main"],
+    "requiredReviews": 1,
+    "requiredStatusChecks": ["reproducibility", "metadata"],
+    "allowForcePushes": false,
+    "staleAfterDays": 7
   }
 }

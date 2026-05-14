@@ -36,6 +36,7 @@ function normalizeRepository(repository) {
     mergeRequests: asArray(repository.mergeRequests),
     reproducibilityRuns: asArray(repository.reproducibilityRuns),
     releasePolicy: repository.releasePolicy || {},
+    branchProtection: repository.branchProtection || {},
   };
 }
 
@@ -388,6 +389,69 @@ function buildReleaseReadiness(repositoryInput, tagId) {
   };
 }
 
+function buildBranchProtectionReport(repositoryInput) {
+  const repository = normalizeRepository(repositoryInput);
+  const commitsById = new Set(repository.commits.map((commit) => commit.id));
+  const asOf = repository.branchProtection.asOf || new Date().toISOString();
+  const staleAfterDays = Number(repository.branchProtection.staleAfterDays || 30);
+  const protectedBranches = new Set(asArray(repository.branchProtection.protectedBranches));
+  const requiredStatusChecks = asArray(repository.branchProtection.requiredStatusChecks);
+  const requiredReviews = Number(repository.branchProtection.requiredReviews || 0);
+  const allowForcePushes = Boolean(repository.branchProtection.allowForcePushes);
+  const asOfTime = new Date(asOf).getTime();
+
+  const branches = repository.branches.map((branch) => {
+    const latestCommit = repository.commits.find((commit) => commit.id === branch.headCommitId);
+    const latestTime = latestCommit ? new Date(latestCommit.createdAt).getTime() : NaN;
+    const staleDays =
+      Number.isFinite(asOfTime) && Number.isFinite(latestTime)
+        ? Math.max(0, Math.floor((asOfTime - latestTime) / (1000 * 60 * 60 * 24)))
+        : null;
+    const matchingMergeRequests = repository.mergeRequests.filter(
+      (mergeRequest) => mergeRequest.sourceBranchId === branch.id || mergeRequest.targetBranchId === branch.id,
+    );
+    const approvedReviews = matchingMergeRequests.reduce(
+      (sum, mergeRequest) => sum + asArray(mergeRequest.reviews).filter((review) => review.state === "approved").length,
+      0,
+    );
+    const checkStatuses = requiredStatusChecks.map((checkId) => {
+      const check = asArray(branch.statusChecks).find((candidate) => candidate.id === checkId);
+      return {
+        id: checkId,
+        status: check ? check.status : "missing",
+      };
+    });
+    const blockers = [];
+    if (!commitsById.has(branch.headCommitId)) blockers.push("unknown-head-commit");
+    if (protectedBranches.has(branch.id) && allowForcePushes) blockers.push("force-pushes-enabled");
+    if (protectedBranches.has(branch.id) && approvedReviews < requiredReviews) blockers.push("insufficient-review-approvals");
+    if (checkStatuses.some((check) => check.status !== "passed")) blockers.push("required-status-check-failed");
+    if (staleDays !== null && staleDays > staleAfterDays) blockers.push("stale-branch");
+
+    return {
+      branchId: branch.id,
+      headCommitId: branch.headCommitId,
+      protected: protectedBranches.has(branch.id),
+      staleDays,
+      requiredReviews,
+      approvedReviews,
+      statusChecks: checkStatuses,
+      blockers,
+      status: blockers.length ? "blocked" : "ready",
+      protectionHash: hashRecord({ branch, checkStatuses, blockers, asOf }),
+    };
+  });
+
+  return {
+    asOf,
+    branches,
+    protectedBranchCount: branches.filter((branch) => branch.protected).length,
+    blockedBranchCount: branches.filter((branch) => branch.status === "blocked").length,
+    readyBranchCount: branches.filter((branch) => branch.status === "ready").length,
+    protectionHash: hashRecord({ branches, asOf, requiredStatusChecks, requiredReviews }),
+  };
+}
+
 function buildRepositoryIntegrityPacket(repositoryInput) {
   const repository = normalizeRepository(repositoryInput);
   const manifest = buildComponentManifest(repository);
@@ -404,6 +468,7 @@ function buildRepositoryIntegrityPacket(repositoryInput) {
     manifest,
     reproducibility,
     editorDiff: buildEditorDiffSummary(repository),
+    branchProtection: buildBranchProtectionReport(repository),
     forks: repository.forks,
     mergeRequests: repository.mergeRequests.map((mergeRequest) =>
       evaluateMergeRequest(repository, mergeRequest),
@@ -422,6 +487,7 @@ function buildRepositoryIntegrityPacket(repositoryInput) {
 module.exports = {
   REQUIRED_COMPONENTS,
   buildComponentManifest,
+  buildBranchProtectionReport,
   buildDatasetDiffSummary,
   buildEditorDiffSummary,
   buildExportBundle,

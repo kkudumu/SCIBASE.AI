@@ -28,9 +28,18 @@
       "escrow": {
         "provider": "algora",
         "status": "funded",
-        "amount": 1000,
+        "amount": 1100,
         "reference": "algora-claim-P5uXJ4HFySs31nVh"
       },
+      "recognitions": [
+        {
+          "label": "honorable mention",
+          "payeeId": "student-climate-team",
+          "payeeType": "institution",
+          "amount": 100,
+          "reason": "Best open data documentation"
+        }
+      ],
       "milestones": [
         { "label": "prototype accepted", "percent": 30 },
         { "label": "final award", "percent": 70 }
@@ -45,6 +54,9 @@
       "visibility": "public",
       "anonymousAllowed": true,
       "ndaRequired": false
+    },
+    "feedbackPolicy": {
+      "responseDueAt": "2026-07-05T17:00:00Z"
     }
   },
   "submission": {
@@ -68,6 +80,20 @@
         "status": "accepted",
         "acceptedAt": "2026-07-02T12:00:00Z",
         "artifactIds": ["artifact-model", "artifact-data", "artifact-whitepaper"]
+      }
+    ],
+    "feedbackResponses": [
+      {
+        "reviewId": "review-a-final",
+        "status": "accepted",
+        "respondedAt": "2026-07-03T10:15:00Z",
+        "notes": "Added final calibration appendix and linked model cards."
+      },
+      {
+        "reviewId": "review-b-final",
+        "status": "accepted",
+        "respondedAt": "2026-07-03T11:05:00Z",
+        "notes": "Published data dictionary errata and rerun logs."
       }
     ],
     "workspace": {
@@ -115,16 +141,28 @@
   ],
   "reviews": [
     {
+      "id": "review-a-final",
       "reviewerId": "reviewer-a",
-      "scores": { "accuracy": 86, "reproducibility": 90, "clarity": 82, "impact": 88 }
+      "scores": { "accuracy": 86, "reproducibility": 90, "clarity": 82, "impact": 88 },
+      "recommendation": "award",
+      "comments": "Strong reproducibility package; request final calibration appendix before release.",
+      "requestedChanges": ["attach-calibration-appendix"]
     },
     {
+      "id": "review-b-final",
       "reviewerId": "reviewer-b",
-      "scores": { "accuracy": 84, "reproducibility": 92, "clarity": 85, "impact": 91 }
+      "scores": { "accuracy": 84, "reproducibility": 92, "clarity": 85, "impact": 91 },
+      "recommendation": "award",
+      "comments": "Open data quality is high after the final rerun evidence.",
+      "requestedChanges": []
     },
     {
+      "id": "review-c-final",
       "reviewerId": "reviewer-c",
-      "scores": { "accuracy": 100, "reproducibility": 100, "clarity": 100, "impact": 100 }
+      "scores": { "accuracy": 100, "reproducibility": 100, "clarity": 100, "impact": 100 },
+      "recommendation": "award",
+      "comments": "Conflicted sponsor score excluded from arbitration.",
+      "requestedChanges": []
     }
   ]
 }

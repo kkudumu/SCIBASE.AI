@@ -21,6 +21,16 @@ console.log(
       payoutStatus: packet.payout.status,
       payoutRoutes: packet.payout.routes,
       ipTransferStatus: packet.payout.ipTransferStatus,
+      feedbackLoop: {
+        status: packet.lifecycle.feedbackLoop.status,
+        items: packet.lifecycle.feedbackLoop.feedbackItems.length,
+        openItemCount: packet.lifecycle.feedbackLoop.openItemCount,
+      },
+      rewardLedger: {
+        status: packet.lifecycle.rewardLedger.status,
+        committedTotal: packet.lifecycle.rewardLedger.committedTotal,
+        recognitionRoutes: packet.lifecycle.rewardLedger.recognitionRoutes,
+      },
       lifecycle: {
         status: packet.lifecycle.status,
         gates: packet.lifecycle.gates.map((gate) => ({

@@ -11,8 +11,9 @@ This module is a distinct milestone for SCIBASE issue #18, Scientific Bounty Sys
 | Version control and audit logs | Submission manifests preserve artifact hashes, version-control refs, audit trail references, and an audit-trail hash. |
 | Arbitration workflow | `buildArbitrationRecord()` combines challenge validation, reviewer conflict checks, eligible reviews, score, blockers, and a decision log hash. |
 | Third-party reviewers or peer validators | `detectReviewerConflicts()` marks reviewer eligibility and excludes sponsor/team/collaborator conflicts. |
+| Feedback loop between submitters and sponsors | `buildSponsorFeedbackLoop()` exposes eligible reviewer comments/requested changes, submitter responses, due dates, open item counts, and feedback hashes. |
 | Smart payout engine | `buildPayoutPlan()` routes prize splits, milestone schedule, payout readiness, and acceptance record hash. |
-| Escrowed prize funds and milestone release | `buildChallengeLifecycleReport()` and `buildMilestoneReleasePlan()` verify escrow funding, accepted milestone evidence, release amounts, balanced payout routes, and release instruction text. |
+| Escrowed prize funds, milestone release, and honorable mentions | `buildChallengeLifecycleReport()`, `buildMilestoneReleasePlan()`, and `buildRewardDistributionLedger()` verify escrow funding, accepted milestone evidence, release amounts, honorable-mention recognitions, balanced committed totals, payout routes, and release instruction text. |
 | IP management options | Payout planning distinguishes solver-retained IP from transfer-after-payout records. |
 | Reviewer-friendly demo | `npm run demo` prints a deterministic sponsor summary, lifecycle gates, milestone releases, and payout routing for `data/sample-bounty.json`. |
 

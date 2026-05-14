@@ -7,7 +7,9 @@ const {
   buildChallengeLifecycleReport,
   buildMilestoneReleasePlan,
   buildPayoutPlan,
+  buildRewardDistributionLedger,
   buildScientificBountyPacket,
+  buildSponsorFeedbackLoop,
   buildSubmissionManifest,
   buildWorkspaceSecuritySummary,
   detectReviewerConflicts,
@@ -106,6 +108,40 @@ function testMilestoneReleasePlan() {
   assert.ok(releases[0].evidenceHash.length >= 16);
 }
 
+function testSponsorFeedbackLoop() {
+  const feedback = buildSponsorFeedbackLoop(
+    sample.challenge,
+    sample.submission,
+    sample.reviewers,
+    sample.reviews,
+  );
+
+  assert.strictEqual(feedback.status, "closed");
+  assert.strictEqual(feedback.feedbackItems.length, 2);
+  assert.strictEqual(feedback.openItemCount, 0);
+  assert.strictEqual(feedback.feedbackItems[0].responseStatus, "accepted");
+  assert.ok(feedback.feedbackHash.length >= 16);
+}
+
+function testRewardDistributionLedger() {
+  const arbitration = buildArbitrationRecord(
+    sample.challenge,
+    sample.submission,
+    sample.reviewers,
+    sample.reviews,
+  );
+  const payout = buildPayoutPlan(sample.challenge, sample.submission, arbitration);
+  const releases = buildMilestoneReleasePlan(sample.challenge, sample.submission, payout);
+  const ledger = buildRewardDistributionLedger(sample.challenge, sample.submission, payout, releases);
+
+  assert.strictEqual(ledger.status, "balanced");
+  assert.strictEqual(ledger.committedTotal, 1100);
+  assert.strictEqual(ledger.escrowAmount, 1100);
+  assert.strictEqual(ledger.recognitionRoutes[0].label, "honorable mention");
+  assert.strictEqual(ledger.recognitionRoutes[0].payeeType, "institution");
+  assert.ok(ledger.ledgerHash.length >= 16);
+}
+
 function testChallengeLifecycleReport() {
   const report = buildChallengeLifecycleReport(
     sample.challenge,
@@ -128,6 +164,8 @@ function testChallengeLifecycleReport() {
 
   assert.strictEqual(report.status, "ready-for-release");
   assert.strictEqual(report.gates.every((gate) => gate.status === "pass"), true);
+  assert.strictEqual(report.feedbackLoop.status, "closed");
+  assert.strictEqual(report.rewardLedger.status, "balanced");
   assert.ok(report.escrowReleaseInstruction.includes("release USD 1000"));
   assert.ok(report.lifecycleHash.length >= 16);
   assert.strictEqual(unfunded.status, "needs-review");
@@ -145,7 +183,7 @@ function testFullPacket() {
   assert.strictEqual(packet.sponsorSummary.decision, "award-recommended");
   assert.strictEqual(packet.sponsorSummary.missingDeliverables, 0);
   assert.strictEqual(packet.sponsorSummary.lifecycleStatus, "ready-for-release");
-  assert.strictEqual(packet.lifecycle.gates.length, 9);
+  assert.strictEqual(packet.lifecycle.gates.length, 11);
   assert.ok(packet.payout.acceptanceRecordHash.length >= 16);
 }
 
@@ -157,6 +195,8 @@ testScoringIgnoresMissingDeliverablesPenaltyWhenComplete();
 testArbitrationRecord();
 testPayoutPlan();
 testMilestoneReleasePlan();
+testSponsorFeedbackLoop();
+testRewardDistributionLedger();
 testChallengeLifecycleReport();
 testFullPacket();
 

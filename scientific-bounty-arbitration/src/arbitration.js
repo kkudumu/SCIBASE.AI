@@ -37,6 +37,7 @@ function normalizeChallenge(challenge) {
     prize: challenge.prize || {},
     ipPolicy: challenge.ipPolicy || {},
     participation: challenge.participation || { visibility: "public" },
+    feedbackPolicy: challenge.feedbackPolicy || {},
   };
 }
 
@@ -299,6 +300,84 @@ function buildMilestoneReleasePlan(challengeInput, submissionInput, payoutPlan) 
   });
 }
 
+function buildSponsorFeedbackLoop(challengeInput, submissionInput, reviewersInput, reviewsInput) {
+  const challenge = normalizeChallenge(challengeInput);
+  const conflicts = detectReviewerConflicts(reviewersInput, submissionInput, challenge);
+  const eligibleReviewerIds = new Set(conflicts.filter((reviewer) => reviewer.eligible).map((reviewer) => reviewer.reviewerId));
+  const responsesByReview = new Map(
+    asArray(submissionInput.feedbackResponses).map((response) => [response.reviewId, response]),
+  );
+  const feedbackItems = asArray(reviewsInput)
+    .filter((review) => eligibleReviewerIds.has(review.reviewerId))
+    .map((review) => {
+      const response = responsesByReview.get(review.id);
+      const requestedChanges = asArray(review.requestedChanges);
+      return {
+        reviewId: review.id || `${review.reviewerId}-review`,
+        reviewerId: review.reviewerId,
+        visibleToTeam: review.visibleToTeam !== false,
+        sponsorDecision: review.recommendation || "evaluate",
+        comments: review.comments || "",
+        requestedChanges,
+        responseStatus: response ? response.status || "received" : requestedChanges.length ? "awaiting-response" : "not-required",
+        responseHash: response ? hashRecord(response) : null,
+      };
+    });
+  const openItems = feedbackItems.filter((item) => item.responseStatus === "awaiting-response");
+
+  return {
+    status: openItems.length ? "open" : "closed",
+    responseDueAt: challenge.feedbackPolicy.responseDueAt || challenge.timeline.finalDueAt || null,
+    feedbackItems,
+    openItemCount: openItems.length,
+    feedbackHash: hashRecord({
+      challengeId: challenge.id,
+      submissionId: submissionInput.id,
+      feedbackItems,
+    }),
+  };
+}
+
+function buildRewardDistributionLedger(challengeInput, submissionInput, payoutPlan, milestoneReleases) {
+  const challenge = normalizeChallenge(challengeInput);
+  const prizeRecognitions = asArray(challenge.prize.recognitions);
+  const recognitionRoutes = prizeRecognitions.map((recognition) => ({
+    label: recognition.label || "recognition",
+    payeeId: recognition.payeeId || submissionInput.teamId || "team-unknown",
+    payeeType: recognition.payeeType || "team",
+    amount: Number(recognition.amount || 0),
+    reason: recognition.reason || "",
+  }));
+  const primaryRoutes = asArray(payoutPlan.routes).map((route) => ({
+    label: "primary award",
+    payeeId: route.payeeId,
+    payeeType: route.payeeType || "individual",
+    amount: Number(route.amount || 0),
+    reason: "award-recommended submission",
+  }));
+  const recognitionTotal = recognitionRoutes.reduce((sum, route) => sum + route.amount, 0);
+  const primaryTotal = primaryRoutes.reduce((sum, route) => sum + route.amount, 0);
+  const escrowAmount = Number((challenge.prize.escrow || {}).amount || 0);
+  const committedTotal = Number((primaryTotal + recognitionTotal).toFixed(2));
+
+  return {
+    status: payoutPlan.status === "ready" && escrowAmount >= committedTotal ? "balanced" : "needs-review",
+    currency: payoutPlan.currency || challenge.prize.currency || "USD",
+    primaryRoutes,
+    recognitionRoutes,
+    milestoneReleases,
+    committedTotal,
+    escrowAmount,
+    ledgerHash: hashRecord({
+      challengeId: challenge.id,
+      submissionId: submissionInput.id,
+      primaryRoutes,
+      recognitionRoutes,
+      milestoneReleases,
+    }),
+  };
+}
+
 function buildChallengeLifecycleReport(challengeInput, submissionInput, reviewersInput, reviewsInput) {
   const challenge = normalizeChallenge(challengeInput);
   const arbitration = buildArbitrationRecord(challenge, submissionInput, reviewersInput, reviewsInput);
@@ -307,6 +386,8 @@ function buildChallengeLifecycleReport(challengeInput, submissionInput, reviewer
   const escrow = challenge.prize.escrow || {};
   const routesTotal = payout.routes.reduce((sum, route) => sum + Number(route.amount || 0), 0);
   const milestoneReleases = buildMilestoneReleasePlan(challenge, submissionInput, payout);
+  const feedbackLoop = buildSponsorFeedbackLoop(challenge, submissionInput, reviewersInput, reviewsInput);
+  const rewardLedger = buildRewardDistributionLedger(challenge, submissionInput, payout, milestoneReleases);
   const gates = [
     {
       id: "challenge-intake",
@@ -348,9 +429,19 @@ function buildChallengeLifecycleReport(challengeInput, submissionInput, reviewer
       },
     },
     {
+      id: "feedback-loop",
+      status: feedbackLoop.status === "closed" ? "pass" : "review",
+      evidence: feedbackLoop,
+    },
+    {
       id: "milestone-release",
       status: milestoneReleases.every((milestone) => milestone.status === "ready-to-release") ? "pass" : "review",
       evidence: { milestoneReleases },
+    },
+    {
+      id: "reward-distribution-ledger",
+      status: rewardLedger.status === "balanced" ? "pass" : "review",
+      evidence: rewardLedger,
     },
     {
       id: "payout-routing",
@@ -379,6 +470,8 @@ function buildChallengeLifecycleReport(challengeInput, submissionInput, reviewer
     submissionId: submissionInput.id,
     status: failed.length ? "blocked" : review.length ? "needs-review" : "ready-for-release",
     gates,
+    feedbackLoop,
+    rewardLedger,
     milestoneReleases,
     escrowReleaseInstruction: payout.status === "ready"
       ? `release ${payout.currency} ${payout.amount} to ${payout.routes.length} route(s) after sponsor approval`
@@ -387,6 +480,8 @@ function buildChallengeLifecycleReport(challengeInput, submissionInput, reviewer
       challengeId: challenge.id,
       submissionId: submissionInput.id,
       gates,
+      feedbackLoop,
+      rewardLedger,
       milestoneReleases,
       payoutRoutes: payout.routes,
     }),
@@ -431,7 +526,9 @@ module.exports = {
   buildChallengeLifecycleReport,
   buildMilestoneReleasePlan,
   buildPayoutPlan,
+  buildRewardDistributionLedger,
   buildScientificBountyPacket,
+  buildSponsorFeedbackLoop,
   buildSubmissionManifest,
   buildWorkspaceSecuritySummary,
   detectReviewerConflicts,

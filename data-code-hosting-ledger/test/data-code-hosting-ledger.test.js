@@ -6,6 +6,7 @@ const {
   buildExecutionPlan,
   buildHostingPacket,
   buildMetadataBundle,
+  buildPreservationPackage,
   buildSandboxPolicy,
   buildStorageManifest,
   classifyArtifact,
@@ -80,11 +81,25 @@ function testSandboxPolicy() {
   assert.ok(policy.policyHash);
 }
 
+function testPreservationPackage() {
+  const preservation = buildPreservationPackage(workspace);
+
+  assert.strictEqual(preservation.identifier, workspace.metadata.doi);
+  assert.ok(preservation.requiredGates.every((gate) => gate.passed));
+  assert.ok(preservation.packageFiles.some((file) => file.path === "metadata/datacite.json"));
+  assert.ok(preservation.packageFiles.some((file) => file.path === "metadata/schema-org.jsonld"));
+  assert.ok(preservation.packageFiles.some((file) => file.path.startsWith("artifacts/data/")));
+  assert.ok(preservation.depositTargets.every((target) => target.ready));
+  assert.ok(preservation.preservationHash.length >= 12);
+}
+
 function testPacket() {
   const packet = buildHostingPacket(workspace);
 
   assert.strictEqual(packet.workspace.id, workspace.id);
   assert.ok(packet.apiRoutes.some((route) => route.includes("fair-score")));
+  assert.ok(packet.apiRoutes.some((route) => route.includes("preservation-package")));
+  assert.strictEqual(packet.preservation.workspaceId, workspace.id);
   assert.ok(packet.packetHash.length >= 12);
 }
 
@@ -93,6 +108,7 @@ testMetadataAndFairScore();
 testPreviewsAndDiffs();
 testExecutionPlan();
 testSandboxPolicy();
+testPreservationPackage();
 testPacket();
 
 console.log("data-code-hosting-ledger tests passed");

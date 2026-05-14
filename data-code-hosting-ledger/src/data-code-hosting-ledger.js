@@ -285,6 +285,99 @@ function buildExecutionPlan(workspaceInput) {
   };
 }
 
+function buildPreservationPackage(workspaceInput) {
+  const workspace = normalizeWorkspace(workspaceInput);
+  const manifest = buildStorageManifest(workspace);
+  const metadata = buildMetadataBundle(workspace);
+  const fair = scoreFairCompliance(workspace);
+  const requiredGates = [
+    {
+      id: "metadata-complete",
+      passed: metadata.missingRequiredFields.length === 0,
+      evidence: metadata.missingRequiredFields.length
+        ? `Missing: ${metadata.missingRequiredFields.join(", ")}`
+        : "All required metadata fields are present.",
+    },
+    {
+      id: "persistent-identifier",
+      passed: Boolean(workspace.metadata.doi || workspace.metadata.uuid),
+      evidence: metadata.identifier,
+    },
+    {
+      id: "licensed-for-reuse",
+      passed: Boolean(workspace.metadata.license),
+      evidence: workspace.metadata.license || "missing license",
+    },
+    {
+      id: "artifact-hashes",
+      passed: manifest.artifacts.every((artifact) => Boolean(artifact.contentHash)),
+      evidence: `${manifest.artifacts.length} artifacts carry content hashes.`,
+    },
+    {
+      id: "fair-threshold",
+      passed: fair.total >= 0.8,
+      evidence: `FAIR score ${fair.total}`,
+    },
+  ];
+  const packageFiles = [
+    {
+      path: "manifest/storage-manifest.json",
+      type: "storage-manifest",
+      hash: manifest.manifestHash,
+    },
+    {
+      path: "metadata/datacite.json",
+      type: "datacite-metadata",
+      hash: hashRecord(metadata.dataCite),
+    },
+    {
+      path: "metadata/schema-org.jsonld",
+      type: "schema-org-jsonld",
+      hash: hashRecord(metadata.jsonLd),
+    },
+    {
+      path: "fair/fair-score.json",
+      type: "fair-score",
+      hash: fair.fairHash,
+    },
+    ...manifest.artifacts.map((artifact) => ({
+      path: `artifacts/${artifact.path}`,
+      type: artifact.category,
+      version: artifact.version,
+      hash: artifact.contentHash,
+    })),
+  ];
+
+  return {
+    workspaceId: workspace.id,
+    identifier: metadata.identifier,
+    persistentUrl: workspace.metadata.persistentUrl || `https://scibase.ai/workspaces/${workspace.id}`,
+    depositTargets: [
+      {
+        id: "datacite",
+        type: "doi-registration",
+        ready: Boolean(metadata.dataCite.doi) && requiredGates.every((gate) => gate.passed),
+        payloadHash: hashRecord(metadata.dataCite),
+      },
+      {
+        id: "repository-export",
+        type: "artifact-bundle",
+        ready: requiredGates.every((gate) => gate.passed),
+        payloadHash: hashRecord(packageFiles),
+      },
+      {
+        id: "schema-org-index",
+        type: "discovery-index",
+        ready: metadata.missingRequiredFields.length === 0,
+        payloadHash: hashRecord(metadata.schemaOrg),
+      },
+    ],
+    requiredGates,
+    packageFiles,
+    preservationHash: hashRecord({ workspaceId: workspace.id, requiredGates, packageFiles }),
+  };
+}
+
 function buildHostingPacket(workspaceInput) {
   const workspace = normalizeWorkspace(workspaceInput);
   const manifest = buildStorageManifest(workspace);
@@ -292,6 +385,7 @@ function buildHostingPacket(workspaceInput) {
   const fair = scoreFairCompliance(workspace);
   const previews = createPreviewPlan(workspace);
   const execution = buildExecutionPlan(workspace);
+  const preservation = buildPreservationPackage(workspace);
 
   return {
     workspace: {
@@ -303,14 +397,16 @@ function buildHostingPacket(workspaceInput) {
     fair,
     previews,
     execution,
+    preservation,
     apiRoutes: [
       `POST /workspaces/${workspace.id}/artifacts`,
       `GET /workspaces/${workspace.id}/artifacts/:artifactId/preview`,
       `GET /workspaces/${workspace.id}/metadata/datacite`,
+      `GET /workspaces/${workspace.id}/preservation-package`,
       `POST /workspaces/${workspace.id}/runs`,
       `GET /workspaces/${workspace.id}/fair-score`,
     ],
-    packetHash: hashRecord({ manifest, metadata, fair, previews, execution }),
+    packetHash: hashRecord({ manifest, metadata, fair, previews, execution, preservation }),
   };
 }
 
@@ -320,6 +416,7 @@ module.exports = {
   buildExecutionPlan,
   buildHostingPacket,
   buildMetadataBundle,
+  buildPreservationPackage,
   buildSandboxPolicy,
   buildStorageManifest,
   classifyArtifact,

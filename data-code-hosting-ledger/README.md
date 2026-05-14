@@ -14,6 +14,7 @@ The issue asks for first-class hosting of datasets, code, notebooks, models, met
 - Dataset row diffing for added, removed, and changed records.
 - Runtime environment resolution for Python, R, Julia, notebooks, and generic artifacts.
 - Sandbox policy planning with Docker isolation, network controls, resource limits, read-only inputs, and writable output paths.
+- Preservation package planning for DataCite DOI registration, repository export, schema.org indexing, required metadata gates, package files, and persistent access links.
 - Execution plan with run-analysis, reproduce-results, and scheduled rerun triggers.
 - API route contracts for uploads, previews, metadata, runs, and FAIR score.
 - Sample workspace fixture, tests, requirement map, CLI demo, and short demo GIF.
@@ -50,6 +51,11 @@ Expected demo shape:
     "changed": 1,
     "removed": 0
   },
+  "preservation": {
+    "identifier": "10.5555/scibase.flood.repro",
+    "readyTargets": ["datacite", "repository-export", "schema-org-index"],
+    "packageFiles": 10
+  },
   "packetHash": "..."
 }
 ```
@@ -60,7 +66,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/data-code-hosting-ledger.js` - artifact classification, manifests, metadata, FAIR score, previews, diffs, runtimes, sandbox policies.
+- `src/data-code-hosting-ledger.js` - artifact classification, manifests, metadata, FAIR score, previews, diffs, runtimes, sandbox policies, preservation packages.
 - `data/sample-workspace.json` - reviewable scientific workspace fixture.
 - `test/data-code-hosting-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

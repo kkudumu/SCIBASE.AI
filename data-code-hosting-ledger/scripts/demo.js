@@ -31,6 +31,14 @@ console.log(
         networkAccess: runtime.sandboxPolicy.networkAccess,
         resourceLimits: runtime.sandboxPolicy.resourceLimits,
       })),
+      preservation: {
+        identifier: packet.preservation.identifier,
+        readyTargets: packet.preservation.depositTargets
+          .filter((target) => target.ready)
+          .map((target) => target.id),
+        packageFiles: packet.preservation.packageFiles.length,
+        gateStatus: packet.preservation.requiredGates.map((gate) => `${gate.id}:${gate.passed}`),
+      },
       datasetDiff: { added: diff.added.length, changed: diff.changed.length, removed: diff.removed.length },
       packetHash: packet.packetHash,
     },

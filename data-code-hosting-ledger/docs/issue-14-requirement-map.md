@@ -11,10 +11,11 @@ This module implements a deterministic scientific data and code hosting mileston
 | JSON-LD, DataCite, and schema.org metadata | `buildMetadataBundle()` emits JSON-LD, DataCite-style, and schema.org metadata from workspace metadata. |
 | FAIR principles compliance | `scoreFairCompliance()` scores findable, accessible, interoperable, and reusable dimensions with blockers. |
 | Scientific tagging and identifiers | Metadata bundle uses DOI/UUID identifiers plus keyword tags; artifacts preserve tags. |
+| Persistent deposit and reuse package | `buildPreservationPackage()` prepares DataCite DOI registration, repository export, schema.org indexing, required metadata gates, package-file hashes, and persistent access URLs. |
 | Container-based executable environments | `resolveRuntimeEnvironment()` and `buildExecutionPlan()` map code/notebooks to Docker image/runtime definitions. |
 | Sandboxed execution controls | `buildSandboxPolicy()` attaches Docker isolation, resource limits, network controls, read-only inputs, writable output paths, and blocked privileged actions to each runtime. |
 | Run analysis, reproduce results, and scheduled reruns | `buildExecutionPlan()` emits manual and cron-style triggers. |
-| Programmatic access | `buildHostingPacket()` includes API route contracts for uploads, previews, DataCite metadata, runs, and FAIR score. |
+| Programmatic access | `buildHostingPacket()` includes API route contracts for uploads, previews, DataCite metadata, preservation package, runs, and FAIR score. |
 | Reviewer demo | `npm run demo` prints artifact categories, FAIR score, preview kinds, runtimes, dataset diff counts, and packet hash. |
 
 ## Verification

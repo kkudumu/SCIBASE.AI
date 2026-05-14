@@ -25,6 +25,12 @@
     "prize": {
       "amount": 1000,
       "currency": "USD",
+      "escrow": {
+        "provider": "algora",
+        "status": "funded",
+        "amount": 1000,
+        "reference": "algora-claim-P5uXJ4HFySs31nVh"
+      },
       "milestones": [
         { "label": "prototype accepted", "percent": 30 },
         { "label": "final award", "percent": 70 }
@@ -49,6 +55,20 @@
     "teamSplits": [
       { "payeeId": "researcher-1", "percent": 0.6 },
       { "payeeId": "researcher-2", "percent": 0.4 }
+    ],
+    "milestoneEvidence": [
+      {
+        "label": "prototype accepted",
+        "status": "accepted",
+        "acceptedAt": "2026-06-03T12:00:00Z",
+        "artifactIds": ["artifact-model", "artifact-data"]
+      },
+      {
+        "label": "final award",
+        "status": "accepted",
+        "acceptedAt": "2026-07-02T12:00:00Z",
+        "artifactIds": ["artifact-model", "artifact-data", "artifact-whitepaper"]
+      }
     ],
     "workspace": {
       "id": "workspace-submission-riverwatch",

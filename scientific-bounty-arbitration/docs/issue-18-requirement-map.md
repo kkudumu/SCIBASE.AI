@@ -1,6 +1,6 @@
 # Issue #18 Requirement Map
 
-This module is a distinct milestone for SCIBASE issue #18, Scientific Bounty System. It focuses on the trust layer needed after teams submit work: deliverable validation, arbitration, scoring, payout readiness, and IP-safe acceptance.
+This module is a distinct milestone for SCIBASE issue #18, Scientific Bounty System. It focuses on the trust layer needed after teams submit work: deliverable validation, arbitration, scoring, lifecycle gates, payout readiness, and IP-safe acceptance.
 
 | Issue requirement | Implementation |
 | --- | --- |
@@ -12,8 +12,9 @@ This module is a distinct milestone for SCIBASE issue #18, Scientific Bounty Sys
 | Arbitration workflow | `buildArbitrationRecord()` combines challenge validation, reviewer conflict checks, eligible reviews, score, blockers, and a decision log hash. |
 | Third-party reviewers or peer validators | `detectReviewerConflicts()` marks reviewer eligibility and excludes sponsor/team/collaborator conflicts. |
 | Smart payout engine | `buildPayoutPlan()` routes prize splits, milestone schedule, payout readiness, and acceptance record hash. |
+| Escrowed prize funds and milestone release | `buildChallengeLifecycleReport()` and `buildMilestoneReleasePlan()` verify escrow funding, accepted milestone evidence, release amounts, balanced payout routes, and release instruction text. |
 | IP management options | Payout planning distinguishes solver-retained IP from transfer-after-payout records. |
-| Reviewer-friendly demo | `npm run demo` prints a deterministic sponsor summary for `data/sample-bounty.json`. |
+| Reviewer-friendly demo | `npm run demo` prints a deterministic sponsor summary, lifecycle gates, milestone releases, and payout routing for `data/sample-bounty.json`. |
 
 ## Verification
 

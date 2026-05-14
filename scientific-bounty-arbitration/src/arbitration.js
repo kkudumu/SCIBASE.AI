@@ -276,6 +276,123 @@ function buildPayoutPlan(challengeInput, submissionInput, arbitrationRecord) {
   };
 }
 
+function buildMilestoneReleasePlan(challengeInput, submissionInput, payoutPlan) {
+  const challenge = normalizeChallenge(challengeInput);
+  const submission = submissionInput || {};
+  const evidenceByLabel = new Map(
+    asArray(submission.milestoneEvidence).map((evidence) => [evidence.label, evidence]),
+  );
+
+  return asArray(challenge.prize.milestones).map((milestone) => {
+    const evidence = evidenceByLabel.get(milestone.label);
+    const amount = Number((Number(challenge.prize.amount || 0) * (Number(milestone.percent || 0) / 100)).toFixed(2));
+    const ready = payoutPlan.status === "ready" && evidence && evidence.status === "accepted";
+
+    return {
+      label: milestone.label,
+      percent: Number(milestone.percent || 0),
+      amount,
+      status: ready ? "ready-to-release" : "pending-evidence",
+      acceptedAt: evidence ? evidence.acceptedAt || null : null,
+      evidenceHash: evidence ? hashRecord(evidence) : null,
+    };
+  });
+}
+
+function buildChallengeLifecycleReport(challengeInput, submissionInput, reviewersInput, reviewsInput) {
+  const challenge = normalizeChallenge(challengeInput);
+  const arbitration = buildArbitrationRecord(challenge, submissionInput, reviewersInput, reviewsInput);
+  const payout = buildPayoutPlan(challenge, submissionInput, arbitration);
+  const manifest = arbitration.score.manifest;
+  const escrow = challenge.prize.escrow || {};
+  const routesTotal = payout.routes.reduce((sum, route) => sum + Number(route.amount || 0), 0);
+  const milestoneReleases = buildMilestoneReleasePlan(challenge, submissionInput, payout);
+  const gates = [
+    {
+      id: "challenge-intake",
+      status: arbitration.challengeValidation.status === "publishable" ? "pass" : "fail",
+      evidence: { findings: arbitration.challengeValidation.findings },
+    },
+    {
+      id: "escrow-funded",
+      status: escrow.status === "funded" && Number(escrow.amount || 0) >= Number(challenge.prize.amount || 0) ? "pass" : "review",
+      evidence: {
+        provider: escrow.provider || null,
+        reference: escrow.reference || null,
+        amount: Number(escrow.amount || 0),
+        expectedAmount: Number(challenge.prize.amount || 0),
+      },
+    },
+    {
+      id: "secure-workspace",
+      status: manifest.workspaceSecurity.status === "ready" ? "pass" : "fail",
+      evidence: manifest.workspaceSecurity,
+    },
+    {
+      id: "deliverable-manifest",
+      status: manifest.missingRequired.length === 0 ? "pass" : "fail",
+      evidence: { missingRequired: manifest.missingRequired },
+    },
+    {
+      id: "independent-review",
+      status: arbitration.reviewerConflicts.filter((reviewer) => reviewer.eligible).length >= 2 ? "pass" : "fail",
+      evidence: { reviewerConflicts: arbitration.reviewerConflicts },
+    },
+    {
+      id: "arbitration-decision",
+      status: arbitration.status === "award-recommended" ? "pass" : "review",
+      evidence: {
+        decision: arbitration.status,
+        finalScore: arbitration.score.finalScore,
+        blockerReasons: arbitration.blockerReasons,
+      },
+    },
+    {
+      id: "milestone-release",
+      status: milestoneReleases.every((milestone) => milestone.status === "ready-to-release") ? "pass" : "review",
+      evidence: { milestoneReleases },
+    },
+    {
+      id: "payout-routing",
+      status: payout.status === "ready" && Number(routesTotal.toFixed(2)) === Number(payout.amount || 0) ? "pass" : "fail",
+      evidence: {
+        payoutStatus: payout.status,
+        amount: payout.amount || 0,
+        routesTotal: Number(routesTotal.toFixed(2)),
+        routes: payout.routes,
+      },
+    },
+    {
+      id: "ip-handoff",
+      status: payout.ipTransferStatus === "transfer-after-payout" || payout.ipTransferStatus === "solver-retains-ip" ? "pass" : "review",
+      evidence: {
+        ipPolicy: challenge.ipPolicy,
+        ipTransferStatus: payout.ipTransferStatus,
+      },
+    },
+  ];
+  const failed = gates.filter((gate) => gate.status === "fail");
+  const review = gates.filter((gate) => gate.status === "review");
+
+  return {
+    challengeId: challenge.id,
+    submissionId: submissionInput.id,
+    status: failed.length ? "blocked" : review.length ? "needs-review" : "ready-for-release",
+    gates,
+    milestoneReleases,
+    escrowReleaseInstruction: payout.status === "ready"
+      ? `release ${payout.currency} ${payout.amount} to ${payout.routes.length} route(s) after sponsor approval`
+      : null,
+    lifecycleHash: hashRecord({
+      challengeId: challenge.id,
+      submissionId: submissionInput.id,
+      gates,
+      milestoneReleases,
+      payoutRoutes: payout.routes,
+    }),
+  };
+}
+
 function buildScientificBountyPacket(challengeInput, submissionInput, reviewersInput, reviewsInput) {
   const arbitration = buildArbitrationRecord(
     challengeInput,
@@ -284,18 +401,26 @@ function buildScientificBountyPacket(challengeInput, submissionInput, reviewersI
     reviewsInput,
   );
   const payout = buildPayoutPlan(challengeInput, submissionInput, arbitration);
+  const lifecycle = buildChallengeLifecycleReport(
+    challengeInput,
+    submissionInput,
+    reviewersInput,
+    reviewsInput,
+  );
 
   return {
     challengeId: normalizeChallenge(challengeInput).id,
     submissionId: submissionInput.id,
     arbitration,
     payout,
+    lifecycle,
     sponsorSummary: {
       decision: arbitration.status,
       finalScore: arbitration.score.finalScore,
       eligibleReviewers: arbitration.reviewerConflicts.filter((reviewer) => reviewer.eligible).length,
       missingDeliverables: arbitration.score.manifest.missingRequired.length,
       payoutStatus: payout.status,
+      lifecycleStatus: lifecycle.status,
     },
   };
 }
@@ -303,6 +428,8 @@ function buildScientificBountyPacket(challengeInput, submissionInput, reviewersI
 module.exports = {
   REQUIRED_CHALLENGE_FIELDS,
   buildArbitrationRecord,
+  buildChallengeLifecycleReport,
+  buildMilestoneReleasePlan,
   buildPayoutPlan,
   buildScientificBountyPacket,
   buildSubmissionManifest,

@@ -4,6 +4,8 @@ const assert = require("assert");
 const sample = require("../data/sample-bounty.json");
 const {
   buildArbitrationRecord,
+  buildChallengeLifecycleReport,
+  buildMilestoneReleasePlan,
   buildPayoutPlan,
   buildScientificBountyPacket,
   buildSubmissionManifest,
@@ -87,6 +89,51 @@ function testPayoutPlan() {
   assert.strictEqual(payout.ipTransferStatus, "transfer-after-payout");
 }
 
+function testMilestoneReleasePlan() {
+  const arbitration = buildArbitrationRecord(
+    sample.challenge,
+    sample.submission,
+    sample.reviewers,
+    sample.reviews,
+  );
+  const payout = buildPayoutPlan(sample.challenge, sample.submission, arbitration);
+  const releases = buildMilestoneReleasePlan(sample.challenge, sample.submission, payout);
+
+  assert.strictEqual(releases.length, 2);
+  assert.strictEqual(releases[0].amount, 300);
+  assert.strictEqual(releases[1].amount, 700);
+  assert.strictEqual(releases.every((release) => release.status === "ready-to-release"), true);
+  assert.ok(releases[0].evidenceHash.length >= 16);
+}
+
+function testChallengeLifecycleReport() {
+  const report = buildChallengeLifecycleReport(
+    sample.challenge,
+    sample.submission,
+    sample.reviewers,
+    sample.reviews,
+  );
+  const unfunded = buildChallengeLifecycleReport(
+    {
+      ...sample.challenge,
+      prize: {
+        ...sample.challenge.prize,
+        escrow: { status: "pending", amount: 0 },
+      },
+    },
+    sample.submission,
+    sample.reviewers,
+    sample.reviews,
+  );
+
+  assert.strictEqual(report.status, "ready-for-release");
+  assert.strictEqual(report.gates.every((gate) => gate.status === "pass"), true);
+  assert.ok(report.escrowReleaseInstruction.includes("release USD 1000"));
+  assert.ok(report.lifecycleHash.length >= 16);
+  assert.strictEqual(unfunded.status, "needs-review");
+  assert.ok(unfunded.gates.find((gate) => gate.id === "escrow-funded" && gate.status === "review"));
+}
+
 function testFullPacket() {
   const packet = buildScientificBountyPacket(
     sample.challenge,
@@ -97,6 +144,8 @@ function testFullPacket() {
 
   assert.strictEqual(packet.sponsorSummary.decision, "award-recommended");
   assert.strictEqual(packet.sponsorSummary.missingDeliverables, 0);
+  assert.strictEqual(packet.sponsorSummary.lifecycleStatus, "ready-for-release");
+  assert.strictEqual(packet.lifecycle.gates.length, 9);
   assert.ok(packet.payout.acceptanceRecordHash.length >= 16);
 }
 
@@ -107,6 +156,8 @@ testReviewerConflicts();
 testScoringIgnoresMissingDeliverablesPenaltyWhenComplete();
 testArbitrationRecord();
 testPayoutPlan();
+testMilestoneReleasePlan();
+testChallengeLifecycleReport();
 testFullPacket();
 
 console.log("scientific-bounty-arbitration tests passed");

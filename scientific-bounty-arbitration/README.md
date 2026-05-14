@@ -13,6 +13,7 @@ The issue asks for a full scientific bounty system. This module focuses on a dis
 - Weighted rubric scoring using only eligible independent reviews.
 - Arbitration record with blocker reasons, final score, decision status, and decision log hash.
 - Payout plan with milestone schedule, team splits, payout readiness, and IP transfer status.
+- Challenge lifecycle report with intake, escrow funding, secure workspace, deliverable manifest, independent review, arbitration, milestone release, payout routing, and IP handoff gates.
 - Sample bounty fixture, tests, requirement map, CLI demo, and short demo GIF.
 
 ## Run
@@ -40,7 +41,11 @@ Expected demo shape:
   "payoutRoutes": [
     { "payeeId": "researcher-1", "amount": 600 },
     { "payeeId": "researcher-2", "amount": 400 }
-  ]
+  ],
+  "lifecycle": {
+    "status": "ready-for-release",
+    "escrowReleaseInstruction": "release USD 1000 to 2 route(s) after sponsor approval"
+  }
 }
 ```
 
@@ -50,7 +55,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/arbitration.js` - challenge validation, manifests, scoring, arbitration, and payout planning.
+- `src/arbitration.js` - challenge validation, manifests, scoring, arbitration, lifecycle gates, and payout planning.
 - `data/sample-bounty.json` - reviewable scientific challenge/submission fixture.
 - `test/arbitration.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

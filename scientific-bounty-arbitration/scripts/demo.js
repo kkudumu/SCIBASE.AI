@@ -21,6 +21,15 @@ console.log(
       payoutStatus: packet.payout.status,
       payoutRoutes: packet.payout.routes,
       ipTransferStatus: packet.payout.ipTransferStatus,
+      lifecycle: {
+        status: packet.lifecycle.status,
+        gates: packet.lifecycle.gates.map((gate) => ({
+          id: gate.id,
+          status: gate.status,
+        })),
+        milestoneReleases: packet.lifecycle.milestoneReleases,
+        escrowReleaseInstruction: packet.lifecycle.escrowReleaseInstruction,
+      },
       decisionLogHash: packet.arbitration.decisionLogHash,
     },
     null,

@@ -8,6 +8,7 @@ The issue asks for a full scientific bounty system. This module focuses on a dis
 
 - Challenge validation for required posting fields and rubric integrity.
 - Submission manifest builder that maps artifacts to deliverables and records hashes.
+- Workspace security summary for private submission spaces, scoped team access, version-control refs, and audit-trail hashes.
 - Reviewer conflict detection for sponsor affiliation, submission team membership, and collaborator overlap.
 - Weighted rubric scoring using only eligible independent reviews.
 - Arbitration record with blocker reasons, final score, decision status, and decision log hash.
@@ -31,6 +32,10 @@ Expected demo shape:
   "decision": "award-recommended",
   "finalScore": 86.95,
   "eligibleReviewers": 2,
+  "workspaceSecurity": {
+    "status": "ready",
+    "versionControlRef": "riverwatch/final-submission@7f4c9b2"
+  },
   "payoutStatus": "ready",
   "payoutRoutes": [
     { "payeeId": "researcher-1", "amount": 600 },

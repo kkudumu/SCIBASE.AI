@@ -17,6 +17,7 @@ console.log(
       decision: packet.sponsorSummary.decision,
       finalScore: packet.sponsorSummary.finalScore,
       eligibleReviewers: packet.sponsorSummary.eligibleReviewers,
+      workspaceSecurity: packet.arbitration.score.manifest.workspaceSecurity,
       payoutStatus: packet.payout.status,
       payoutRoutes: packet.payout.routes,
       ipTransferStatus: packet.payout.ipTransferStatus,

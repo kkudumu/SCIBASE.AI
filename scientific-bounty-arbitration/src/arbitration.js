@@ -84,6 +84,32 @@ function validateChallenge(challengeInput) {
   };
 }
 
+function buildWorkspaceSecuritySummary(submissionInput) {
+  const submission = submissionInput || {};
+  const workspace = submission.workspace || {};
+  const auditTrail = asArray(submission.auditTrail);
+  const findings = [];
+
+  if (!workspace.id) findings.push("workspace-id-missing");
+  if (workspace.visibility !== "private") findings.push("workspace-not-private");
+  if (!workspace.accessControl || !asArray(workspace.accessControl.allowedTeamIds).includes(submission.teamId)) {
+    findings.push("team-access-not-scoped");
+  }
+  if (!workspace.versionControl || workspace.versionControl.enabled !== true) {
+    findings.push("version-control-disabled");
+  }
+  if (auditTrail.length === 0) findings.push("audit-trail-empty");
+
+  return {
+    workspaceId: workspace.id || null,
+    status: findings.length ? "needs-review" : "ready",
+    findings,
+    visibility: workspace.visibility || "unknown",
+    versionControlRef: workspace.versionControl ? workspace.versionControl.ref || null : null,
+    auditTrailHash: auditTrail.length ? hashRecord(auditTrail) : null,
+  };
+}
+
 function buildSubmissionManifest(challengeInput, submissionInput) {
   const challenge = normalizeChallenge(challengeInput);
   const submission = submissionInput || {};
@@ -113,6 +139,7 @@ function buildSubmissionManifest(challengeInput, submissionInput) {
     deliverables: deliverableManifest,
     missingRequired: deliverableManifest.filter((item) => item.required && item.status === "missing"),
     auditTrail: asArray(submission.auditTrail),
+    workspaceSecurity: buildWorkspaceSecuritySummary(submission),
   };
 }
 
@@ -279,6 +306,7 @@ module.exports = {
   buildPayoutPlan,
   buildScientificBountyPacket,
   buildSubmissionManifest,
+  buildWorkspaceSecuritySummary,
   detectReviewerConflicts,
   hashRecord,
   normalizeChallenge,

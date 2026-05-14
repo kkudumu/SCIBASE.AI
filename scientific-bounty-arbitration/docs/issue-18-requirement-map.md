@@ -7,7 +7,8 @@ This module is a distinct milestone for SCIBASE issue #18, Scientific Bounty Sys
 | Challenge posting portal requirements | `validateChallenge()` checks required problem, context, deliverables, rubric, timeline, prize, and IP fields before publication. |
 | Evaluation criteria and scoring rubric | `scoreSubmission()` averages eligible reviewer scores across weighted rubric items and applies deliverable penalties. |
 | Submission package builder | `buildSubmissionManifest()` maps artifacts to required deliverables and produces hashes for auditability. |
-| Version control and audit logs | Submission manifests preserve artifact hashes and audit trail references. |
+| Secure private submission workspace | `buildWorkspaceSecuritySummary()` checks private visibility, scoped team access, enabled version control, and audit-trail presence. |
+| Version control and audit logs | Submission manifests preserve artifact hashes, version-control refs, audit trail references, and an audit-trail hash. |
 | Arbitration workflow | `buildArbitrationRecord()` combines challenge validation, reviewer conflict checks, eligible reviews, score, blockers, and a decision log hash. |
 | Third-party reviewers or peer validators | `detectReviewerConflicts()` marks reviewer eligibility and excludes sponsor/team/collaborator conflicts. |
 | Smart payout engine | `buildPayoutPlan()` routes prize splits, milestone schedule, payout readiness, and acceptance record hash. |

@@ -50,6 +50,19 @@
       { "payeeId": "researcher-1", "percent": 0.6 },
       { "payeeId": "researcher-2", "percent": 0.4 }
     ],
+    "workspace": {
+      "id": "workspace-submission-riverwatch",
+      "visibility": "private",
+      "accessControl": {
+        "allowedTeamIds": ["team-riverwatch"],
+        "allowedReviewerIds": ["reviewer-a", "reviewer-b"]
+      },
+      "versionControl": {
+        "enabled": true,
+        "provider": "git",
+        "ref": "riverwatch/final-submission@7f4c9b2"
+      }
+    },
     "artifacts": [
       { "id": "artifact-model", "deliverableId": "model", "uri": "ipfs://model", "version": "1.0.0" },
       { "id": "artifact-data", "deliverableId": "dataset", "uri": "ipfs://dataset", "version": "1.0.0" },

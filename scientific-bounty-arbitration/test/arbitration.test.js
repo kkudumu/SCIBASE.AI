@@ -7,6 +7,7 @@ const {
   buildPayoutPlan,
   buildScientificBountyPacket,
   buildSubmissionManifest,
+  buildWorkspaceSecuritySummary,
   detectReviewerConflicts,
   scoreSubmission,
   validateChallenge,
@@ -26,6 +27,19 @@ function testSubmissionManifest() {
   assert.strictEqual(manifest.missingRequired.length, 0);
   assert.ok(manifest.deliverables.find((item) => item.deliverableId === "demo").status === "optional-missing");
   assert.ok(manifest.manifestHash.length >= 16);
+  assert.strictEqual(manifest.workspaceSecurity.status, "ready");
+  assert.ok(manifest.workspaceSecurity.auditTrailHash.length >= 16);
+}
+
+function testWorkspaceSecuritySummary() {
+  const summary = buildWorkspaceSecuritySummary(sample.submission);
+  const insecure = buildWorkspaceSecuritySummary({ ...sample.submission, workspace: { visibility: "public" }, auditTrail: [] });
+
+  assert.strictEqual(summary.workspaceId, "workspace-submission-riverwatch");
+  assert.strictEqual(summary.versionControlRef, "riverwatch/final-submission@7f4c9b2");
+  assert.deepStrictEqual(summary.findings, []);
+  assert.ok(insecure.findings.includes("workspace-not-private"));
+  assert.ok(insecure.findings.includes("audit-trail-empty"));
 }
 
 function testReviewerConflicts() {
@@ -88,6 +102,7 @@ function testFullPacket() {
 
 testChallengeValidation();
 testSubmissionManifest();
+testWorkspaceSecuritySummary();
 testReviewerConflicts();
 testScoringIgnoresMissingDeliverablesPenaltyWhenComplete();
 testArbitrationRecord();

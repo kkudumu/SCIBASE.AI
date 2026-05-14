@@ -1,0 +1,22 @@
+"use strict";
+
+const sample = require("../data/sample-research.json");
+const { buildResearchToolsPacket } = require("../src/ai-research-mvp-tools");
+
+const packet = buildResearchToolsPacket(sample);
+
+console.log(
+  JSON.stringify(
+    {
+      document: packet.document.title,
+      summaryModes: Object.keys(packet.summaries),
+      qualityScore: packet.reviewReport.qualityScore,
+      reviewFindings: packet.reviewReport.findings.map((finding) => `${finding.category}:${finding.message}`),
+      topCitation: packet.citationRecommendations[0],
+      insertActions: packet.insertActions.length,
+      packetHash: packet.packetHash,
+    },
+    null,
+    2,
+  ),
+);

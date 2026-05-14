@@ -1,0 +1,61 @@
+{
+  "document": {
+    "id": "draft-flood-microbiome",
+    "title": "Coastal flooding changes microbial diversity in urban waterways",
+    "domain": "biology",
+    "body": "Abstract. Coastal flooding is increasing in urban waterways. We analyzed 240 microbiome samples collected before and after flood exposure using Jupyter notebooks and open metadata. Methods. Samples were sequenced with 16S profiling and processed in a reproducible Docker environment. Results show a statistically significant decrease in microbial diversity after flooding with p < 0.03. The analysis found that flood exposure was associated with shifts in coastal pathogen markers. These findings suggest that climate-linked flooding could reshape urban microbial ecology. Data availability is provided through an open repository with notebooks and raw count tables. Future work should validate these results across additional cities and include confidence interval reporting.",
+    "references": [
+      {
+        "doi": "10.1038/s41586-020-2649-2",
+        "title": "Existing microbiome atlas",
+        "authors": ["Reference Author"],
+        "year": 2020,
+        "venue": "Nature"
+      }
+    ]
+  },
+  "openAccessCorpus": [
+    {
+      "id": "oa-1",
+      "title": "Flood exposure and microbial diversity in estuaries",
+      "abstract": "Coastal flooding changes microbial diversity and pathogen markers in estuary samples after flood exposure."
+    },
+    {
+      "id": "oa-2",
+      "title": "Quantum sensor calibration",
+      "abstract": "A physics calibration method for instrument uncertainty and error bars."
+    }
+  ],
+  "citationCorpus": [
+    {
+      "id": "cite-1",
+      "doi": "10.1016/j.watres.2025.120001",
+      "title": "Urban floodwater microbiome dynamics",
+      "authors": ["M. Rivera", "S. Nair"],
+      "year": 2025,
+      "venue": "Water Research",
+      "abstract": "Urban floodwater microbiome dynamics reveal shifts in pathogen markers and microbial diversity after coastal flooding.",
+      "citations": 88
+    },
+    {
+      "id": "cite-2",
+      "doi": "10.1101/2026.04.01.123456",
+      "title": "Reproducible Docker workflows for environmental microbiome notebooks",
+      "authors": ["A. Chen", "R. Patel"],
+      "year": 2026,
+      "venue": "bioRxiv",
+      "abstract": "Docker and Jupyter notebook workflows improve reproducibility for environmental microbiome analysis.",
+      "citations": 12
+    },
+    {
+      "id": "cite-3",
+      "doi": "10.1038/s41586-020-2649-2",
+      "title": "Existing microbiome atlas",
+      "authors": ["Reference Author"],
+      "year": 2020,
+      "venue": "Nature",
+      "abstract": "A previously cited microbiome atlas.",
+      "citations": 300
+    }
+  ]
+}

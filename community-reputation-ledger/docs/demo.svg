@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Community Reputation Ledger Demo</title>
+  <desc id="desc">Visual demo for peer review, contribution credit, reputation scoring, badges, and leaderboards.</desc>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+    .bg { fill: #f8faf7; }
+    .panel { fill: #fff; stroke: #d7dece; stroke-width: 2; rx: 8; }
+    .headline { font-size: 34px; font-weight: 700; }
+    .small { font-size: 18px; }
+    .label { font-size: 15px; fill: #607044; }
+    .score { font-size: 38px; font-weight: 700; fill: #256f3a; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+  </style>
+  <rect class="bg" width="960" height="540"/>
+  <text x="48" y="64" class="headline">Community Reputation Ledger</text>
+  <text x="48" y="96" class="small">Peer review · CRediT attribution · transparent scores · badges</text>
+  <rect x="48" y="132" width="260" height="150" class="panel"/>
+  <text x="72" y="166" class="label">Review Modes</text>
+  <text x="72" y="214" class="score">4</text>
+  <text x="72" y="250" class="small">public to double-blind</text>
+  <rect x="350" y="132" width="260" height="150" class="panel"/>
+  <text x="374" y="166" class="label">CRediT Roles</text>
+  <text x="374" y="214" class="score">14</text>
+  <text x="374" y="250" class="small">validated contribution types</text>
+  <rect x="652" y="132" width="260" height="150" class="panel"/>
+  <text x="676" y="166" class="label">Leaderboards</text>
+  <text x="676" y="214" class="score">3</text>
+  <text x="676" y="250" class="small">domain · region · institution</text>
+  <rect x="48" y="318" width="864" height="142" class="panel"/>
+  <text x="72" y="354" class="label">Transparent Score</text>
+  <text x="72" y="388" class="mono">citations + forks + endorsements + reviews + reproducibility + credit - penalties</text>
+  <text x="72" y="424" class="mono">Self-endorsements are ignored before badge and tier assignment.</text>
+</svg>

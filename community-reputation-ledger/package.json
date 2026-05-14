@@ -1,0 +1,12 @@
+{
+  "name": "scibase-community-reputation-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Community review, contribution credit, and reputation scoring module for SCIBASE issue #15.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/community-reputation-ledger.js && node --check scripts/demo.js && node --check test/community-reputation-ledger.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/community-reputation-ledger.test.js"
+  }
+}

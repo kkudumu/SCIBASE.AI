@@ -1,0 +1,185 @@
+{
+  "researchers": [
+    {
+      "id": "u-ada",
+      "displayName": "Ada Chen",
+      "domain": "biology",
+      "region": "North America",
+      "institution": "Northstar Lab"
+    },
+    {
+      "id": "u-ravi",
+      "displayName": "Ravi Patel",
+      "domain": "biology",
+      "region": "Europe",
+      "institution": "Open Bio Institute"
+    },
+    {
+      "id": "u-maya",
+      "displayName": "Maya Okafor",
+      "domain": "social-sciences",
+      "region": "Africa",
+      "institution": "Civic Methods Center"
+    }
+  ],
+  "projects": [
+    {
+      "id": "project-flood-microbiome",
+      "title": "Coastal flooding microbiome atlas",
+      "domain": "biology",
+      "visibility": "public"
+    },
+    {
+      "id": "project-civic-survey",
+      "title": "Civic survey reproducibility pack",
+      "domain": "social-sciences",
+      "visibility": "public"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "review-1",
+      "projectId": "project-flood-microbiome",
+      "reviewerId": "u-ravi",
+      "discipline": "biology",
+      "visibility": "public",
+      "scores": {
+        "clarity": 4.5,
+        "methodology": 4,
+        "data-quality": 5,
+        "reproducibility": 4,
+        "novelty": 3.5
+      },
+      "recommendation": "accept-with-minor-revisions",
+      "summary": "Strong open dataset with clear reproducibility hooks.",
+      "strengths": ["Raw data and notebooks are easy to trace", "Protocol metadata is complete"],
+      "concerns": ["Clarify batch effects in the methods appendix"],
+      "createdAt": "2026-05-03T10:00:00Z"
+    },
+    {
+      "id": "review-2",
+      "projectId": "project-civic-survey",
+      "reviewerId": "u-ada",
+      "discipline": "social-sciences",
+      "visibility": "double-blind",
+      "scores": {
+        "clarity": 4,
+        "ethics": 5,
+        "sampling": 3.5,
+        "reproducibility": 4.5,
+        "impact": 4
+      },
+      "recommendation": "revise",
+      "summary": "Promising survey pack with strong ethics disclosure.",
+      "strengths": ["Consent workflow is explicit", "Analysis scripts are included"],
+      "concerns": ["Sampling limitations need clearer framing"],
+      "createdAt": "2026-05-04T12:00:00Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": "comment-1",
+      "projectId": "project-flood-microbiome",
+      "authorId": "u-ravi",
+      "target": {
+        "kind": "dataset",
+        "path": "data/samples.csv",
+        "anchor": "column:collection_site"
+      },
+      "mode": "public",
+      "body": "Please document whether collection_site was GPS rounded.",
+      "createdAt": "2026-05-03T10:15:00Z"
+    },
+    {
+      "id": "comment-2",
+      "projectId": "project-civic-survey",
+      "authorId": "u-ada",
+      "target": {
+        "kind": "notebook",
+        "path": "notebooks/weighting.ipynb",
+        "lineStart": 42
+      },
+      "mode": "anonymous",
+      "body": "The weighting cell should include a seed for deterministic reruns.",
+      "createdAt": "2026-05-04T12:20:00Z"
+    }
+  ],
+  "contributions": [
+    {
+      "id": "contrib-1",
+      "projectId": "project-flood-microbiome",
+      "contributorId": "u-ada",
+      "type": "dataset",
+      "roles": ["data-curation", "investigation"],
+      "impact": 1.4,
+      "timestamp": "2026-05-01T09:00:00Z"
+    },
+    {
+      "id": "contrib-2",
+      "projectId": "project-flood-microbiome",
+      "contributorId": "u-ada",
+      "type": "code",
+      "roles": ["software", "formal-analysis"],
+      "impact": 1.2,
+      "timestamp": "2026-05-02T09:00:00Z"
+    },
+    {
+      "id": "contrib-3",
+      "projectId": "project-flood-microbiome",
+      "contributorId": "u-ravi",
+      "type": "review",
+      "roles": ["validation", "writing-review-editing"],
+      "impact": 1.1,
+      "timestamp": "2026-05-03T10:00:00Z"
+    },
+    {
+      "id": "contrib-4",
+      "projectId": "project-civic-survey",
+      "contributorId": "u-maya",
+      "type": "authorship",
+      "roles": ["conceptualization", "methodology", "writing-original-draft"],
+      "impact": 1.5,
+      "timestamp": "2026-05-04T08:00:00Z"
+    },
+    {
+      "id": "contrib-5",
+      "projectId": "project-civic-survey",
+      "contributorId": "u-ada",
+      "type": "review",
+      "roles": ["validation", "writing-review-editing"],
+      "impact": 1,
+      "timestamp": "2026-05-04T12:00:00Z"
+    }
+  ],
+  "endorsements": [
+    { "from": "u-ravi", "to": "u-ada", "weight": 5, "status": "active" },
+    { "from": "u-maya", "to": "u-ada", "weight": 4, "status": "active" },
+    { "from": "u-ada", "to": "u-ada", "weight": 5, "status": "active" },
+    { "from": "u-ada", "to": "u-ravi", "weight": 4, "status": "active" }
+  ],
+  "metrics": {
+    "researchers": {
+      "u-ada": {
+        "citations": 34,
+        "forks": 8,
+        "reproducibilityBadges": 2,
+        "bountyCompletions": 1,
+        "flags": []
+      },
+      "u-ravi": {
+        "citations": 12,
+        "forks": 3,
+        "reproducibilityBadges": 1,
+        "bountyCompletions": 0,
+        "flags": []
+      },
+      "u-maya": {
+        "citations": 18,
+        "forks": 2,
+        "reproducibilityBadges": 0,
+        "bountyCompletions": 0,
+        "flags": [{ "id": "flag-1", "severity": "low", "reason": "late review disclosure" }]
+      }
+    }
+  }
+}

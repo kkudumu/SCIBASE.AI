@@ -6,6 +6,7 @@ const {
   buildExecutionPlan,
   buildHostingPacket,
   buildMetadataBundle,
+  buildSandboxPolicy,
   buildStorageManifest,
   classifyArtifact,
   createPreviewPlan,
@@ -61,9 +62,22 @@ function testExecutionPlan() {
 
   assert.strictEqual(runtime.stack, "python");
   assert.strictEqual(runtime.sandbox, true);
+  assert.strictEqual(runtime.sandboxPolicy.networkAccess, false);
+  assert.ok(runtime.sandboxPolicy.blockedActions.includes("privileged-container"));
   assert.ok(runtime.command.includes("jupyter"));
   assert.ok(plan.triggers.some((trigger) => trigger.id === "scheduled-refresh"));
   assert.strictEqual(plan.runtimes.length, 2);
+}
+
+function testSandboxPolicy() {
+  const policy = buildSandboxPolicy(workspace, "artifact-analysis");
+
+  assert.strictEqual(policy.enabled, true);
+  assert.strictEqual(policy.isolation, "docker");
+  assert.deepStrictEqual(policy.resourceLimits, { cpu: "2", memory: "4Gi", timeoutSeconds: 1800 });
+  assert.ok(policy.readOnlyArtifactIds.includes("artifact-samples-v1"));
+  assert.ok(policy.writablePaths.includes("outputs/"));
+  assert.ok(policy.policyHash);
 }
 
 function testPacket() {
@@ -78,6 +92,7 @@ testStorageManifest();
 testMetadataAndFairScore();
 testPreviewsAndDiffs();
 testExecutionPlan();
+testSandboxPolicy();
 testPacket();
 
 console.log("data-code-hosting-ledger tests passed");

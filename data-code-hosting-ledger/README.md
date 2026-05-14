@@ -13,6 +13,7 @@ The issue asks for first-class hosting of datasets, code, notebooks, models, met
 - Preview route planning for spreadsheets, JSON, notebooks, code, thumbnails, and model cards.
 - Dataset row diffing for added, removed, and changed records.
 - Runtime environment resolution for Python, R, Julia, notebooks, and generic artifacts.
+- Sandbox policy planning with Docker isolation, network controls, resource limits, read-only inputs, and writable output paths.
 - Execution plan with run-analysis, reproduce-results, and scheduled rerun triggers.
 - API route contracts for uploads, previews, metadata, runs, and FAIR score.
 - Sample workspace fixture, tests, requirement map, CLI demo, and short demo GIF.
@@ -34,6 +35,16 @@ Expected demo shape:
   "fairScore": 0.9417,
   "previewKinds": ["code", "image-thumbnail", "model-card", "notebook", "spreadsheet"],
   "runtimes": ["python:python:3.12-slim"],
+  "sandboxPolicies": [
+    {
+      "isolation": "docker",
+      "networkAccess": false,
+      "resourceLimits": {
+        "cpu": "2",
+        "memory": "4Gi"
+      }
+    }
+  ],
   "datasetDiff": {
     "added": 1,
     "changed": 1,
@@ -49,7 +60,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/data-code-hosting-ledger.js` - artifact classification, manifests, metadata, FAIR score, previews, diffs, runtimes.
+- `src/data-code-hosting-ledger.js` - artifact classification, manifests, metadata, FAIR score, previews, diffs, runtimes, sandbox policies.
 - `data/sample-workspace.json` - reviewable scientific workspace fixture.
 - `test/data-code-hosting-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

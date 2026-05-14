@@ -223,6 +223,7 @@ function resolveRuntimeEnvironment(workspaceInput, artifactId) {
     image: environment.image,
     definition: environment.dockerfile || environment.environmentYml || null,
     sandbox: environment.sandbox !== false,
+    sandboxPolicy: buildSandboxPolicy(workspace, artifactId),
     command: artifact.runCommand || defaultRunCommand(classified.extension, artifact.path),
     runtimeHash: hashRecord({ artifactId, environment, artifactPath: artifact.path }),
   };
@@ -234,6 +235,39 @@ function defaultRunCommand(ext, path) {
   if (ext === ".r") return `Rscript ${path}`;
   if (ext === ".jl") return `julia ${path}`;
   return `cat ${path}`;
+}
+
+function buildSandboxPolicy(workspaceInput, artifactId) {
+  const workspace = normalizeWorkspace(workspaceInput);
+  const artifact = workspace.artifacts.find((candidate) => candidate.id === artifactId);
+  if (!artifact) throw new Error(`unknown artifact: ${artifactId}`);
+  const environment = workspace.environments.find((candidate) => asArray(candidate.artifactIds).includes(artifactId)) || {};
+  const resourceLimits = environment.resourceLimits || {
+    cpu: "2",
+    memory: "4Gi",
+    timeoutSeconds: 3600,
+  };
+  const networkAccess = environment.networkAccess === true;
+  const secretNames = asArray(environment.secretNames);
+
+  return {
+    artifactId,
+    enabled: environment.sandbox !== false,
+    isolation: environment.orchestrator || "docker",
+    ephemeralWorkspace: true,
+    networkAccess,
+    secretNames,
+    resourceLimits,
+    readOnlyArtifactIds: workspace.artifacts.map((candidate) => candidate.id),
+    writablePaths: asArray(environment.writablePaths).length ? asArray(environment.writablePaths) : ["/tmp/scibase-run", "outputs/"],
+    blockedActions: [
+      "host-filesystem-write",
+      "privileged-container",
+      ...(networkAccess ? [] : ["unscoped-network"]),
+      ...(secretNames.length ? [] : ["secret-mounts"]),
+    ],
+    policyHash: hashRecord({ workspaceId: workspace.id, artifactId, resourceLimits, networkAccess, secretNames }),
+  };
 }
 
 function buildExecutionPlan(workspaceInput) {
@@ -286,6 +320,7 @@ module.exports = {
   buildExecutionPlan,
   buildHostingPacket,
   buildMetadataBundle,
+  buildSandboxPolicy,
   buildStorageManifest,
   classifyArtifact,
   createPreviewPlan,

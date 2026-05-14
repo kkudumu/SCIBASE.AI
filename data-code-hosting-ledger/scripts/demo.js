@@ -25,6 +25,12 @@ console.log(
       fairScore: packet.fair.total,
       previewKinds: Array.from(new Set(packet.previews.map((preview) => preview.preview))).sort(),
       runtimes: packet.execution.runtimes.map((runtime) => `${runtime.stack}:${runtime.image}`),
+      sandboxPolicies: packet.execution.runtimes.map((runtime) => ({
+        artifactId: runtime.artifactId,
+        isolation: runtime.sandboxPolicy.isolation,
+        networkAccess: runtime.sandboxPolicy.networkAccess,
+        resourceLimits: runtime.sandboxPolicy.resourceLimits,
+      })),
       datasetDiff: { added: diff.added.length, changed: diff.changed.length, removed: diff.removed.length },
       packetHash: packet.packetHash,
     },

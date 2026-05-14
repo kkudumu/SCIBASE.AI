@@ -69,7 +69,15 @@
       "image": "python:3.12-slim",
       "dockerfile": "FROM python:3.12-slim\nRUN pip install pandas notebook",
       "artifactIds": ["artifact-analysis", "artifact-notebook"],
-      "sandbox": true
+      "sandbox": true,
+      "orchestrator": "docker",
+      "networkAccess": false,
+      "resourceLimits": {
+        "cpu": "2",
+        "memory": "4Gi",
+        "timeoutSeconds": 1800
+      },
+      "writablePaths": ["/tmp/scibase-run", "outputs/"]
     }
   ],
   "runs": [

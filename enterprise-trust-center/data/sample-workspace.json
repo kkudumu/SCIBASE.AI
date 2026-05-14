@@ -9,9 +9,65 @@
     { "id": "u-004", "status": "invited", "role": "reviewer", "mfaEnabled": false }
   ],
   "projects": [
-    { "id": "p-101", "title": "Longitudinal microbiome atlas", "auditLogEnabled": true },
-    { "id": "p-102", "title": "Climate model reproducibility pack", "auditLogEnabled": true },
-    { "id": "p-103", "title": "Retrospective cohort review", "auditLogEnabled": false }
+    {
+      "id": "p-101",
+      "title": "Longitudinal microbiome atlas",
+      "auditLogEnabled": true,
+      "exportMetadata": {
+        "doi": "10.5555/borealis.microbiome",
+        "orcid": "0000-0002-1825-0097",
+        "license": "CC-BY-4.0",
+        "versionHistory": true,
+        "citationIds": ["pmid:123456"],
+        "grantId": "NIH-R01-42",
+        "openAccessStatus": "compliant"
+      }
+    },
+    {
+      "id": "p-102",
+      "title": "Climate model reproducibility pack",
+      "auditLogEnabled": true,
+      "exportMetadata": {
+        "doi": "10.5555/borealis.climate",
+        "license": "CC-BY-4.0",
+        "versionHistory": true,
+        "openAccessStatus": "pending"
+      }
+    },
+    {
+      "id": "p-103",
+      "title": "Retrospective cohort review",
+      "auditLogEnabled": false,
+      "exportMetadata": {
+        "orcid": "0000-0003-1415-9265"
+      }
+    }
+  ],
+  "exportTargets": [
+    {
+      "id": "zenodo",
+      "name": "Zenodo deposition",
+      "category": "indexed-repository",
+      "formats": ["datacite-json", "archive-zip"],
+      "requiredFields": ["doi", "license", "versionHistory"],
+      "preservedIdentifiers": ["doi", "citationIds", "versionHistory"]
+    },
+    {
+      "id": "journal-submission",
+      "name": "Journal submission package",
+      "category": "journal",
+      "formats": ["jats", "docx", "latex"],
+      "requiredFields": ["doi", "orcid", "license"],
+      "preservedIdentifiers": ["doi", "orcid", "citationIds"]
+    },
+    {
+      "id": "funder-portal",
+      "name": "Funder compliance report",
+      "category": "grant-portal",
+      "formats": ["grant-report-json", "csv"],
+      "requiredFields": ["grantId", "openAccessStatus"],
+      "preservedIdentifiers": ["doi", "orcid"]
+    }
   ],
   "integrations": [
     {

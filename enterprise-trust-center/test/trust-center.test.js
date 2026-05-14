@@ -6,6 +6,7 @@ const {
   buildAdminDashboard,
   buildApiCatalog,
   buildEnterpriseTrustCenter,
+  buildExportPipelineCatalog,
   computeUsageAnalytics,
   evaluateCompliance,
   packageComplianceExport,
@@ -43,13 +44,28 @@ function testApiCatalog() {
   assert.ok(catalog[1].scopes.includes("write:projects"));
 }
 
+function testExportPipelineCatalog() {
+  const pipelines = buildExportPipelineCatalog(sampleWorkspace);
+  const journal = pipelines.find((pipeline) => pipeline.id === "journal-submission");
+
+  assert.strictEqual(pipelines.length, 3);
+  assert.ok(journal.formats.includes("jats"));
+  assert.ok(journal.formats.includes("docx"));
+  assert.ok(journal.formats.includes("latex"));
+  assert.deepStrictEqual(journal.readyProjectIds, ["p-101"]);
+  assert.ok(journal.blockedProjects.some((project) => project.projectId === "p-102" && project.missingFields.includes("orcid")));
+  assert.ok(journal.preservedIdentifiers.includes("doi"));
+}
+
 function testDashboardAndExport() {
   const dashboard = buildAdminDashboard(sampleWorkspace);
   const complianceExport = packageComplianceExport(sampleWorkspace);
 
   assert.strictEqual(dashboard.workspace.id, "inst-borealis");
+  assert.strictEqual(dashboard.exportPipelines.length, 3);
   assert.strictEqual(dashboard.nextActions.length, 4);
   assert.strictEqual(complianceExport.complianceStatus, "blocked");
+  assert.strictEqual(complianceExport.evidenceManifest.exportTargets, 3);
   assert.strictEqual(complianceExport.evidenceManifest.auditEntries, 3);
   assert.strictEqual(complianceExport.auditSummary["integration.connected"], 1);
 }
@@ -80,6 +96,7 @@ function testFullBuild() {
 testAnalytics();
 testCompliance();
 testApiCatalog();
+testExportPipelineCatalog();
 testDashboardAndExport();
 testWebhookSigning();
 testFullBuild();

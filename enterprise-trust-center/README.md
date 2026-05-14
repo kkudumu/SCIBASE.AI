@@ -10,6 +10,7 @@ The module gives institutional administrators a deterministic trust-center workf
 - Compliance analytics for MFA coverage, audit-log coverage, webhook health, open incidents, and overdue data requests.
 - Secure API catalog showing integration scopes, owners, active key counts, rotation timestamps, risk, and webhook endpoints.
 - HMAC-signed trust-center webhook events.
+- Export pipeline catalog for repositories, journal submission packages, and funder portals with required metadata checks.
 - Compliance export bundle with evidence manifest and audit summary.
 - Sample workspace data, tests, and a deterministic CLI demo.
 
@@ -30,6 +31,14 @@ Expected demo shape:
   "status": "blocked",
   "activeUsers": 3,
   "integrations": 2,
+  "exportPipelines": [
+    {
+      "id": "journal-submission",
+      "formats": ["jats", "docx", "latex"],
+      "readyProjects": 1,
+      "blockedProjects": 2
+    }
+  ],
   "nextActions": [
     {
       "checkId": "mfa-coverage",
@@ -50,7 +59,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough of the dashboa
 
 ## Files
 
-- `src/trust-center.js` - core enterprise trust-center functions.
+- `src/trust-center.js` - core enterprise trust-center functions, including export pipeline readiness checks.
 - `data/sample-workspace.json` - reviewable institutional workspace fixture.
 - `test/trust-center.test.js` - dependency-free Node assertions.
 - `scripts/demo.js` - CLI demo for reviewer smoke testing.

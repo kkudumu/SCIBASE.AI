@@ -43,6 +43,7 @@ function normalizeWorkspace(workspace) {
     incidents: asArray(workspace.incidents),
     apiKeys: asArray(workspace.apiKeys),
     auditLog: asArray(workspace.auditLog),
+    exportTargets: asArray(workspace.exportTargets),
   };
 }
 
@@ -97,6 +98,62 @@ function computeUsageAnalytics(workspaceInput) {
     overdueDataRequests: overdueRequests.length,
     apiIntegrations: workspace.integrations.length,
   };
+}
+
+function buildExportPipelineCatalog(workspaceInput) {
+  const workspace = normalizeWorkspace(workspaceInput);
+  const defaultTargets = [
+    {
+      id: "zenodo",
+      name: "Zenodo deposition",
+      category: "indexed-repository",
+      formats: ["datacite-json", "archive-zip"],
+      requiredFields: ["doi", "license", "versionHistory"],
+    },
+    {
+      id: "journal-submission",
+      name: "Journal submission package",
+      category: "journal",
+      formats: ["jats", "docx", "latex"],
+      requiredFields: ["doi", "orcid", "license"],
+    },
+    {
+      id: "funder-portal",
+      name: "Funder compliance report",
+      category: "grant-portal",
+      formats: ["grant-report-json", "csv"],
+      requiredFields: ["grantId", "openAccessStatus"],
+    },
+  ];
+  const targets = workspace.exportTargets.length ? workspace.exportTargets : defaultTargets;
+
+  return targets.map((target) => {
+    const requiredFields = asArray(target.requiredFields);
+    const projects = workspace.projects.map((project) => {
+      const exportMetadata = project.exportMetadata || {};
+      const missingFields = requiredFields.filter((field) => !exportMetadata[field]);
+      return {
+        projectId: project.id,
+        title: project.title,
+        ready: missingFields.length === 0,
+        missingFields,
+      };
+    });
+
+    return {
+      id: target.id,
+      name: target.name,
+      category: target.category || "custom",
+      formats: asArray(target.formats),
+      requiredFields,
+      route: `/enterprise/${workspace.id}/exports/${target.id}`,
+      readyProjectIds: projects.filter((project) => project.ready).map((project) => project.projectId),
+      blockedProjects: projects.filter((project) => !project.ready),
+      preservedIdentifiers: ["doi", "orcid", "citationIds", "versionHistory"].filter((field) =>
+        requiredFields.includes(field) || asArray(target.preservedIdentifiers).includes(field),
+      ),
+    };
+  });
 }
 
 function evaluateCompliance(workspaceInput, policyInput = {}) {
@@ -201,6 +258,7 @@ function buildAdminDashboard(workspaceInput) {
   const analytics = computeUsageAnalytics(workspace);
   const compliance = evaluateCompliance(workspace);
   const apiCatalog = buildApiCatalog(workspace);
+  const exportPipelines = buildExportPipelineCatalog(workspace);
 
   return {
     workspace: {
@@ -217,6 +275,7 @@ function buildAdminDashboard(workspaceInput) {
     analytics,
     compliance,
     integrations: apiCatalog,
+    exportPipelines,
     nextActions: compliance.failedChecks.map((check) => ({
       checkId: check.id,
       title: check.label,
@@ -229,6 +288,7 @@ function packageComplianceExport(workspaceInput) {
   const workspace = normalizeWorkspace(workspaceInput);
   const dashboard = buildAdminDashboard(workspace);
   const events = generateWebhookEvents(workspace);
+  const exportPipelines = buildExportPipelineCatalog(workspace);
   const auditSummary = workspace.auditLog.reduce((summary, entry) => {
     const action = entry.action || "unknown";
     summary[action] = (summary[action] || 0) + 1;
@@ -241,6 +301,7 @@ function packageComplianceExport(workspaceInput) {
     workspace: dashboard.workspace,
     complianceStatus: dashboard.compliance.status,
     dashboard,
+    exportPipelines,
     webhookEvents: events,
     auditSummary,
     evidenceManifest: {
@@ -250,6 +311,7 @@ function packageComplianceExport(workspaceInput) {
       dataRequests: workspace.dataRequests.length,
       incidents: workspace.incidents.length,
       auditEntries: workspace.auditLog.length,
+      exportTargets: exportPipelines.length,
     },
   };
 }
@@ -274,6 +336,7 @@ module.exports = {
   buildAdminDashboard,
   buildApiCatalog,
   buildEnterpriseTrustCenter,
+  buildExportPipelineCatalog,
   computeUsageAnalytics,
   evaluateCompliance,
   generateWebhookEvents,

@@ -13,6 +13,12 @@ const summary = {
   status: trustCenter.dashboard.headline.status,
   activeUsers: trustCenter.dashboard.headline.activeUsers,
   integrations: trustCenter.dashboard.headline.apiIntegrations,
+  exportPipelines: trustCenter.dashboard.exportPipelines.map((pipeline) => ({
+    id: pipeline.id,
+    formats: pipeline.formats,
+    readyProjects: pipeline.readyProjectIds.length,
+    blockedProjects: pipeline.blockedProjects.length,
+  })),
   nextActions: trustCenter.dashboard.nextActions,
   firstSignedWebhook: {
     type: trustCenter.signedWebhookEvents[0].type,

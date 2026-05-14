@@ -1,0 +1,83 @@
+{
+  "id": "workspace-flood-repro",
+  "title": "Flood microbiome reproducibility workspace",
+  "metadata": {
+    "doi": "10.5555/scibase.flood.repro",
+    "uuid": "2aa92fd5-b978-4e89-bdea-66bd99f655c0",
+    "title": "Flood microbiome reproducibility workspace",
+    "creators": ["Ada Chen", "Ravi Patel"],
+    "license": "CC-BY-4.0",
+    "keywords": ["microbiome", "coastal flooding", "reproducibility"],
+    "description": "Data, code, notebooks, and runtime metadata for reproducing flood microbiome analysis.",
+    "publisher": "SCIBASE.AI",
+    "publicationYear": 2026,
+    "persistentUrl": "https://scibase.ai/workspaces/workspace-flood-repro",
+    "accessPolicy": "public-read-controlled-write",
+    "provenance": "Raw samples were processed with notebooks and Docker runtime metadata."
+  },
+  "artifacts": [
+    {
+      "id": "artifact-samples-v1",
+      "path": "data/samples.csv",
+      "sizeBytes": 12000,
+      "content": "id,diversity\ns1,0.7\ns2,0.5",
+      "version": "v1",
+      "tags": ["dataset", "microbiome"]
+    },
+    {
+      "id": "artifact-samples-v2",
+      "path": "data/samples.csv",
+      "sizeBytes": 14000,
+      "content": "id,diversity\ns1,0.72\ns2,0.5\ns3,0.9",
+      "version": "v2",
+      "tags": ["dataset", "microbiome"]
+    },
+    {
+      "id": "artifact-analysis",
+      "path": "code/analyze.py",
+      "sizeBytes": 2400,
+      "content": "print('analysis')",
+      "version": "v1",
+      "runCommand": "python code/analyze.py"
+    },
+    {
+      "id": "artifact-notebook",
+      "path": "notebooks/reproduce.ipynb",
+      "sizeBytes": 9800,
+      "content": "{}",
+      "version": "v1"
+    },
+    {
+      "id": "artifact-figure",
+      "path": "figures/diversity.png",
+      "sizeBytes": 180000,
+      "content": "binary",
+      "version": "v1"
+    },
+    {
+      "id": "artifact-model",
+      "path": "models/classifier.pt",
+      "sizeBytes": 25000000,
+      "content": "weights",
+      "version": "v1"
+    }
+  ],
+  "environments": [
+    {
+      "id": "env-python-repro",
+      "stack": "python",
+      "image": "python:3.12-slim",
+      "dockerfile": "FROM python:3.12-slim\nRUN pip install pandas notebook",
+      "artifactIds": ["artifact-analysis", "artifact-notebook"],
+      "sandbox": true
+    }
+  ],
+  "runs": [
+    {
+      "id": "run-1",
+      "artifactId": "artifact-analysis",
+      "status": "passed",
+      "createdAt": "2026-05-10T09:00:00Z"
+    }
+  ]
+}

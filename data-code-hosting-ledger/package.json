@@ -1,0 +1,12 @@
+{
+  "name": "scibase-data-code-hosting-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scientific data and code hosting ledger for SCIBASE issue #14.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/data-code-hosting-ledger.js && node --check scripts/demo.js && node --check test/data-code-hosting-ledger.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/data-code-hosting-ledger.test.js"
+  }
+}

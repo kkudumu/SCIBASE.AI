@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Data and Code Hosting Ledger Demo</title>
+  <desc id="desc">Visual demo for scientific artifact hosting, metadata, FAIR scoring, previews, and executable environments.</desc>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+    .bg { fill: #f7fbfa; }
+    .panel { fill: #fff; stroke: #d4e2df; stroke-width: 2; rx: 8; }
+    .headline { font-size: 34px; font-weight: 700; }
+    .small { font-size: 18px; }
+    .label { font-size: 15px; fill: #4f6d67; }
+    .score { font-size: 38px; font-weight: 700; fill: #147261; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+  </style>
+  <rect class="bg" width="960" height="540"/>
+  <text x="48" y="64" class="headline">Data and Code Hosting Ledger</text>
+  <text x="48" y="96" class="small">Artifacts · metadata · FAIR · previews · executable environments</text>
+  <rect x="48" y="132" width="260" height="150" class="panel"/>
+  <text x="72" y="166" class="label">File Types</text>
+  <text x="72" y="214" class="score">13</text>
+  <text x="72" y="250" class="small">data · code · notebooks · models</text>
+  <rect x="350" y="132" width="260" height="150" class="panel"/>
+  <text x="374" y="166" class="label">FAIR Score</text>
+  <text x="374" y="214" class="score">0.96</text>
+  <text x="374" y="250" class="small">findable to reusable</text>
+  <rect x="652" y="132" width="260" height="150" class="panel"/>
+  <text x="676" y="166" class="label">Runtime</text>
+  <text x="676" y="214" class="score">Docker</text>
+  <text x="676" y="250" class="small">sandboxed execution plan</text>
+  <rect x="48" y="318" width="864" height="142" class="panel"/>
+  <text x="72" y="354" class="label">Hosting Packet</text>
+  <text x="72" y="388" class="mono">preview routes + DataCite metadata + dataset diffs + run triggers</text>
+  <text x="72" y="424" class="mono">Manual run-analysis and scheduled rerun triggers are included.</text>
+</svg>

@@ -319,8 +319,73 @@ function buildResearchJourney(graphInput, startEntityId, maxHops = 3) {
   };
 }
 
+function schemaTypeForEntity(type) {
+  return {
+    project: "ScholarlyArticle",
+    author: "Person",
+    affiliation: "Organization",
+    concept: "DefinedTerm",
+    tool: "SoftwareApplication",
+    dataset: "Dataset",
+    protocol: "CreativeWork",
+    reference: "ScholarlyArticle",
+    funder: "FundingAgency",
+  }[type] || "Thing";
+}
+
+function buildGraphLinkedDataExport(graphInput) {
+  const graph = graphInput.nodes ? graphInput : buildKnowledgeGraph(graphInput);
+  const nodeRecords = graph.nodes.map((node) => ({
+    "@id": node.id,
+    "@type": schemaTypeForEntity(node.type),
+    name: node.label,
+    identifier: node.doi || node.orcid || node.path || node.id,
+    additionalType: node.type,
+    ...(node.domain ? { about: node.domain } : {}),
+    ...(node.year ? { datePublished: String(node.year) } : {}),
+    ...(node.citationCount !== undefined ? { citationCount: Number(node.citationCount || 0) } : {}),
+    ...(node.reproducibility ? { reproducibility: node.reproducibility } : {}),
+    ...(node.ontology ? { inDefinedTermSet: node.ontology } : {}),
+  }));
+
+  const relationshipRecords = graph.edges.map((edge) => ({
+    "@id": edge.id,
+    "@type": "Relationship",
+    source: edge.source,
+    relation: edge.relation,
+    target: edge.target,
+    evidence: edge.evidence,
+    weight: edge.weight,
+  }));
+
+  const provenanceRecords = graph.edges.map((edge) => ({
+    edgeId: edge.id,
+    source: edge.source,
+    relation: edge.relation,
+    target: edge.target,
+    evidence: edge.evidence,
+    evidenceHash: hashRecord(edge.evidence),
+  }));
+
+  return {
+    "@context": {
+      "@vocab": "https://schema.org/",
+      relation: "https://schema.org/relationship",
+      evidence: "https://scibase.ai/terms/evidence",
+      reproducibility: "https://scibase.ai/terms/reproducibility",
+      inDefinedTermSet: "https://schema.org/inDefinedTermSet",
+    },
+    "@graph": [...nodeRecords, ...relationshipRecords],
+    provenance: provenanceRecords,
+    entityCount: nodeRecords.length,
+    relationshipCount: relationshipRecords.length,
+    exportHash: hashRecord({ nodeRecords, relationshipRecords, provenanceRecords }),
+  };
+}
+
 function buildKnowledgeGraphPacket(corpusInput) {
   const graph = buildKnowledgeGraph(corpusInput);
+  const linkedDataExport = buildGraphLinkedDataExport(graph);
   const entityPages = graph.nodes
     .filter((node) => ["concept", "dataset", "tool", "author"].includes(node.type))
     .slice(0, 8)
@@ -344,14 +409,16 @@ function buildKnowledgeGraphPacket(corpusInput) {
       buildResearchJourney(graph, "concept:crispr", 2),
       buildResearchJourney(graph, "dataset:dataset-flood-samples", 2),
     ],
+    linkedDataExport,
     recommendationDigest,
     apiRoutes: [
       "GET /knowledge-graph/entities",
       "GET /knowledge-graph/entities/:id",
       "GET /knowledge-graph/search?type=dataset&reproducibility=verified",
       "GET /knowledge-graph/recommendations/:userId",
+      "GET /knowledge-graph/export/jsonld",
     ],
-    packetHash: hashRecord({ graphHash: graph.graphHash, recommendationDigest }),
+    packetHash: hashRecord({ graphHash: graph.graphHash, recommendationDigest, linkedDataExport: linkedDataExport.exportHash }),
   };
 }
 
@@ -359,6 +426,7 @@ module.exports = {
   ENTITY_TYPES,
   RELATION_TYPES,
   buildEntityPage,
+  buildGraphLinkedDataExport,
   buildKnowledgeGraph,
   buildKnowledgeGraphPacket,
   buildResearchJourney,

@@ -4,6 +4,7 @@ const assert = require("assert");
 const corpus = require("../data/sample-corpus.json");
 const {
   buildEntityPage,
+  buildGraphLinkedDataExport,
   buildKnowledgeGraph,
   buildKnowledgeGraphPacket,
   buildResearchJourney,
@@ -62,6 +63,19 @@ function testResearchJourneys() {
   assert.ok(journey.journeyHash.length >= 12);
 }
 
+function testLinkedDataExport() {
+  const graph = buildKnowledgeGraph(corpus);
+  const linkedData = buildGraphLinkedDataExport(graph);
+
+  assert.strictEqual(linkedData.entityCount, graph.nodes.length);
+  assert.strictEqual(linkedData.relationshipCount, graph.edges.length);
+  assert.ok(linkedData["@context"]["@vocab"].includes("schema.org"));
+  assert.ok(linkedData["@graph"].some((record) => record["@type"] === "Dataset"));
+  assert.ok(linkedData["@graph"].some((record) => record["@type"] === "Relationship"));
+  assert.ok(linkedData.provenance.every((record) => record.evidenceHash.length >= 12));
+  assert.ok(linkedData.exportHash.length >= 12);
+}
+
 function testPacket() {
   const packet = buildKnowledgeGraphPacket(corpus);
 
@@ -69,6 +83,8 @@ function testPacket() {
   assert.ok(packet.supportedRelationTypes.includes("mentions-concept"));
   assert.strictEqual(packet.navigationExamples.length, 3);
   assert.strictEqual(packet.researchJourneys.length, 2);
+  assert.strictEqual(packet.linkedDataExport.entityCount, packet.graph.nodes.length);
+  assert.ok(packet.apiRoutes.includes("GET /knowledge-graph/export/jsonld"));
   assert.strictEqual(packet.recommendationDigest.length, corpus.userProfiles.length);
   assert.ok(packet.packetHash.length >= 12);
 }
@@ -78,6 +94,7 @@ testGraphConstruction();
 testEntityPagesAndNavigation();
 testRecommendations();
 testResearchJourneys();
+testLinkedDataExport();
 testPacket();
 
 console.log("knowledge-graph-navigator tests passed");

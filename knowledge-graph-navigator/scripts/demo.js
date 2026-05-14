@@ -13,6 +13,11 @@ console.log(
       entityPages: packet.entityPages.length,
       verifiedProjects: packet.navigationExamples[1].nodes.map((node) => node.label),
       researchJourneys: packet.researchJourneys,
+      linkedDataExport: {
+        records: packet.linkedDataExport["@graph"].length,
+        provenanceRecords: packet.linkedDataExport.provenance.length,
+        exportHash: packet.linkedDataExport.exportHash,
+      },
       recommendationsForMaya: packet.recommendationDigest.find((digest) => digest.userId === "u-maya").recommendations,
       graphHash: packet.graph.graphHash,
       packetHash: packet.packetHash,

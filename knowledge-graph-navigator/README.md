@@ -10,6 +10,7 @@ The issue asks for entity extraction, linked graph data, graph navigation, entit
 - Local ontology matching for scientific concepts and software tools.
 - Schema.org-style metadata on project nodes.
 - Knowledge graph nodes and edges for authorship, affiliation, datasets, protocols, tools, citations, funding, and related projects.
+- JSON-LD linked-data export with schema.org-compatible entity records, relationship records, evidence provenance, and an export hash.
 - Entity pages with inbound/outbound links, usage contexts, citation counts, and stable hashes.
 - Graph navigation filters by node type, domain, citation count, reproducibility status, and text.
 - Traceable research journeys that walk concept/dataset nodes through projects, datasets, tools, authors, and collaborators.
@@ -42,6 +43,11 @@ Expected demo shape:
       "startEntityId": "concept:crispr"
     }
   ],
+  "linkedDataExport": {
+    "records": 60,
+    "provenanceRecords": 30,
+    "exportHash": "..."
+  },
   "recommendationsForMaya": [
     {
       "projectId": "project:crispr-neuro-screen",
@@ -58,7 +64,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/knowledge-graph-navigator.js` - extraction, graph construction, entity pages, graph queries, recommendations.
+- `src/knowledge-graph-navigator.js` - extraction, graph construction, entity pages, graph queries, JSON-LD export, recommendations.
 - `data/sample-corpus.json` - reviewable scientific corpus fixture.
 - `test/knowledge-graph-navigator.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

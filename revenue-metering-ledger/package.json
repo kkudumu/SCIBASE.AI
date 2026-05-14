@@ -1,0 +1,12 @@
+{
+  "name": "scibase-revenue-metering-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Audit-ready revenue metering and licensing module for SCIBASE issue #20.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/revenue-ledger.js && node --check scripts/demo.js && node --check test/revenue-ledger.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/revenue-ledger.test.js"
+  }
+}

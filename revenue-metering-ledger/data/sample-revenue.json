@@ -1,0 +1,72 @@
+{
+  "catalog": {
+    "plans": [
+      {
+        "id": "individual-pro",
+        "name": "Individual Pro",
+        "basePrice": 29,
+        "includedSeats": 1,
+        "extraSeatPrice": 0,
+        "includedComputeCredits": 15,
+        "annualDiscount": 0.15,
+        "features": ["private-projects", "advanced-ai-tools"]
+      },
+      {
+        "id": "institutional",
+        "name": "Institutional License",
+        "basePrice": 900,
+        "includedSeats": 25,
+        "extraSeatPrice": 18,
+        "includedComputeCredits": 250,
+        "annualDiscount": 0.2,
+        "volumeDiscountThreshold": 75,
+        "volumeDiscount": 0.1,
+        "features": ["private-projects", "institutional-admin", "custom-integrations", "sla"]
+      }
+    ],
+    "computeRates": [
+      { "kind": "summarization", "unitPrice": 0.02 },
+      { "kind": "peer-review", "unitPrice": 0.08 },
+      { "kind": "reproducibility-check", "unitPrice": 1.75 }
+    ],
+    "topUpPacks": [
+      { "id": "compute-100", "credits": 100, "price": 95 },
+      { "id": "compute-500", "credits": 500, "price": 425 }
+    ],
+    "licensingProducts": [
+      {
+        "id": "metadata-trends",
+        "name": "Anonymized metadata trends",
+        "monthlyPrice": 350,
+        "allowedFields": ["topicTrends", "methodUsage", "reproducibilityScores"]
+      }
+    ],
+    "coupons": [
+      { "id": "CONSORTIUM10", "percentOff": 0.1 }
+    ]
+  },
+  "account": {
+    "id": "acct-northstar-university",
+    "planId": "institutional",
+    "seats": 80,
+    "billingCycle": "annual",
+    "couponId": "CONSORTIUM10",
+    "billingProvider": "institutional-invoice",
+    "taxRate": 0.0825,
+    "licensingProductIds": ["metadata-trends"]
+  },
+  "usageEvents": [
+    { "kind": "summarization", "units": 400 },
+    { "kind": "peer-review", "units": 160 },
+    { "kind": "reproducibility-check", "units": 180 }
+  ],
+  "topUpPurchases": [
+    { "id": "topup-001", "packId": "compute-500", "quantity": 1, "provider": "institutional-invoice" }
+  ],
+  "analyticsSnapshot": {
+    "topicTrends": ["microbiome", "coastal flooding", "single-cell"],
+    "methodUsage": { "sequencing": 42, "Bayesian model": 11 },
+    "reproducibilityScores": { "median": 0.82, "p10": 0.44 },
+    "privateProjectTitles": ["redacted proprietary study"]
+  }
+}

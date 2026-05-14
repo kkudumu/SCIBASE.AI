@@ -5,6 +5,7 @@ const sample = require("../data/sample-workspace.json");
 const {
   appendAuditEvent,
   buildAccessDashboard,
+  buildIdentitySecurityReview,
   buildResearcherProfile,
   buildUnifiedIdentity,
   buildWorkspaceAccessPacket,
@@ -92,11 +93,38 @@ function testInvitationAndAudit() {
   assert.ok(audited.auditLog[2].eventHash);
 }
 
+function testIdentitySecurityReview() {
+  const ready = buildIdentitySecurityReview(sample.workspace);
+  const risky = buildIdentitySecurityReview({
+    ...sample.workspace,
+    projects: [
+      ...sample.workspace.projects,
+      {
+        id: "risky-project",
+        visibility: "private",
+        members: [
+          { userId: "u-anon", role: "contributor" },
+          { userId: "u-reviewer", role: "admin" },
+        ],
+      },
+    ],
+    users: sample.workspace.users.map((user) =>
+      user.id === "u-reviewer" ? { ...user, mfaEnabled: false } : user,
+    ),
+  });
+
+  assert.strictEqual(ready.status, "ready");
+  assert.strictEqual(risky.status, "needs-action");
+  assert.ok(risky.findings.some((finding) => finding.type === "anonymous-write-access"));
+  assert.ok(risky.findings.some((finding) => finding.type === "privileged-user-without-mfa"));
+}
+
 function testDashboard() {
   const dashboard = buildAccessDashboard(sample.workspace, sample.activityByUser);
 
   assert.strictEqual(dashboard.identitySummary.users, 3);
   assert.strictEqual(dashboard.identitySummary.orcidLinked, 2);
+  assert.strictEqual(dashboard.identitySecurity.status, "ready");
   assert.strictEqual(dashboard.pendingInvitations.length, 1);
   assert.ok(dashboard.dashboardHash.length >= 12);
 }
@@ -117,6 +145,7 @@ testUnifiedIdentity();
 testResearcherProfile();
 testAccessDecisions();
 testInvitationAndAudit();
+testIdentitySecurityReview();
 testDashboard();
 testFullPacket();
 

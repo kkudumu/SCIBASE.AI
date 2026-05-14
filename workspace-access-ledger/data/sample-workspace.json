@@ -30,6 +30,7 @@
         "profileVisibility": "public",
         "mfaEnabled": true,
         "identities": [
+          { "provider": "email", "subject": "reviewer@example.edu" },
           { "provider": "github", "subject": "reviewer-gh" },
           { "provider": "orcid", "subject": "0000-0003-3333-4444" }
         ]

@@ -14,6 +14,7 @@ console.log(
     {
       workspace: packet.dashboard.workspace.name,
       identitySummary: packet.dashboard.identitySummary,
+      identitySecurity: packet.dashboard.identitySecurity,
       allowedCount: packet.allowedCount,
       deniedCount: packet.deniedCount,
       decisions: packet.decisions,

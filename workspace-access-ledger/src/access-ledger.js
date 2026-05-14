@@ -78,6 +78,63 @@ function buildResearcherProfile(user, activity) {
   };
 }
 
+function buildIdentitySecurityReview(workspaceInput) {
+  const workspace = normalizeWorkspace(workspaceInput);
+  const findings = [];
+
+  for (const user of workspace.users) {
+    const identity = buildUnifiedIdentity(user);
+    if (!identity.providers.includes("email")) {
+      findings.push({
+        userId: user.id,
+        severity: "medium",
+        type: "missing-email-identity",
+        message: "User should have a verified email identity for account recovery.",
+      });
+    }
+    if (identity.anonymousMode && identity.providers.some((provider) => provider !== "email")) {
+      findings.push({
+        userId: user.id,
+        severity: "medium",
+        type: "anonymous-linked-identity",
+        message: "Anonymous mode should not expose linked external identities.",
+      });
+    }
+  }
+
+  for (const project of workspace.projects) {
+    for (const member of asArray(project.members)) {
+      const user = workspace.users.find((candidate) => candidate.id === member.userId);
+      if (!user) continue;
+      const roleRank = ROLE_RANK[member.role] || 0;
+      if (roleRank >= ROLE_RANK.admin && !user.mfaEnabled) {
+        findings.push({
+          userId: user.id,
+          projectId: project.id,
+          severity: "high",
+          type: "privileged-user-without-mfa",
+          message: "Owner/admin project roles require MFA.",
+        });
+      }
+      if (user.anonymousMode && roleRank >= ROLE_RANK.contributor) {
+        findings.push({
+          userId: user.id,
+          projectId: project.id,
+          severity: "high",
+          type: "anonymous-write-access",
+          message: "Anonymous users should not have write-capable project roles.",
+        });
+      }
+    }
+  }
+
+  return {
+    status: findings.some((finding) => finding.severity === "high") ? "needs-action" : "ready",
+    findings,
+    reviewHash: hashRecord(findings),
+  };
+}
+
 function membershipFor(project, userId) {
   return asArray(project.members).find((member) => member.userId === userId) || null;
 }
@@ -200,6 +257,7 @@ function buildAccessDashboard(workspaceInput, activityByUser) {
     },
     profiles,
     projectSummary,
+    identitySecurity: buildIdentitySecurityReview(workspace),
     pendingInvitations: workspace.invitations.filter((invitation) => invitation.status === "pending"),
     auditEvents: workspace.auditLog.length,
     dashboardHash: hashRecord({ identities, profiles, projectSummary, auditLog: workspace.auditLog }),
@@ -225,6 +283,7 @@ module.exports = {
   ROLE_RANK,
   appendAuditEvent,
   buildAccessDashboard,
+  buildIdentitySecurityReview,
   buildResearcherProfile,
   buildUnifiedIdentity,
   buildWorkspaceAccessPacket,

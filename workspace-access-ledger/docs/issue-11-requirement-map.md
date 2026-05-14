@@ -5,6 +5,7 @@ This module is a deterministic milestone for SCIBASE issue #11, User & Project M
 | Issue requirement | Implementation |
 | --- | --- |
 | Email/OAuth/ORCID/SAML identity | `buildUnifiedIdentity()` models linked provider identities, ORCID links, SAML links, MFA, and anonymous mode. |
+| 2FA and anonymous-mode safeguards | `buildIdentitySecurityReview()` flags privileged project roles without MFA and anonymous users with write-capable membership. |
 | Researcher profiles | `buildResearcherProfile()` summarizes institution, field, keywords, ORCID sync, activity, citations-style metrics, and reputation. |
 | Project spaces | Sample projects include manuscripts, code/dataset policy objects, visibility, institution binding, members, and object rules. |
 | Visibility settings | `evaluateAccess()` supports public, private, institutional-only, and role/object-rule paths. |

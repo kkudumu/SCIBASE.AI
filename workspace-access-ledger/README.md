@@ -7,6 +7,7 @@ The issue asks for identity, researcher profiles, scientific workspaces, permiss
 ## What It Adds
 
 - Unified identity summaries for email, ORCID, GitHub/OAuth, SAML, MFA, and anonymous mode.
+- Identity security review that flags privileged roles without MFA and anonymous users with write-capable access.
 - Researcher profiles with institution, field, keywords, ORCID sync, activity, citation-style metrics, and reputation score.
 - Project-space access evaluation with visibility, RBAC, and object-level rules.
 - External collaborator invitations with role, read-only mode, expiry, and invitation hash.
@@ -32,6 +33,9 @@ Expected demo shape:
     "users": 3,
     "orcidLinked": 2,
     "samlLinked": 1
+  },
+  "identitySecurity": {
+    "status": "ready"
   },
   "allowedCount": 2,
   "deniedCount": 1

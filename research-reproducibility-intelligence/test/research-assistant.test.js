@@ -7,6 +7,7 @@ const {
   buildPeerReviewReport,
   buildResearchGapFeed,
   buildReproducibilityReport,
+  buildWorkflowOrchestration,
   overlapScore,
 } = require("../src/research-assistant");
 
@@ -46,11 +47,40 @@ function testResearchGapFeed() {
   assert.ok(gaps[0].suggestedDirection.includes("replication-ready"));
 }
 
+function testWorkflowOrchestration() {
+  const workflow = buildWorkflowOrchestration(sampleProject);
+
+  assert.strictEqual(workflow.projectId, "proj-microbiome-2026");
+  assert.strictEqual(workflow.blocked, true);
+  assert.ok(workflow.riskScore > 0);
+  assert.ok(workflow.orchestrationHash.length > 8);
+  assert.ok(workflow.stages.some((stage) => stage.stage === "peer-review"));
+  assert.ok(workflow.stages.some((stage) => stage.stage === "reproducibility"));
+  assert.ok(workflow.stages.some((stage) => stage.stage === "gap-finder"));
+
+  const topAction = workflow.actions[0];
+  assert.strictEqual(topAction.status, "blocking");
+  assert.ok(["structure", "claim-evidence"].includes(topAction.source));
+  assert.strictEqual(topAction.owner, "Dr. Chen");
+  assert.ok(topAction.evidenceHash.length > 8);
+
+  const runbookAction = workflow.actions.find((action) => action.id === "repro-runbook");
+  assert.strictEqual(runbookAction.status, "ready");
+  assert.strictEqual(runbookAction.owner, "Replication Desk");
+  assert.deepStrictEqual(runbookAction.dependsOn, []);
+
+  const gapAction = workflow.actions.find((action) => action.stage === "gap-finder");
+  assert.strictEqual(gapAction.owner, "Research Strategy");
+  assert.deepStrictEqual(gapAction.dependsOn, ["repro-runbook"]);
+}
+
 function testAssistantPacket() {
   const packet = buildAssistantPacket(sampleProject);
 
   assert.strictEqual(packet.project.domain, "environmental health");
   assert.ok(packet.readinessScore > 0);
+  assert.strictEqual(packet.workflow.projectId, "proj-microbiome-2026");
+  assert.ok(packet.workflow.orchestrationHash.length > 8);
   assert.ok(packet.nextActions.length >= 4);
   assert.ok(packet.researchGaps[0].priority >= packet.researchGaps.at(-1).priority);
 }
@@ -59,6 +89,7 @@ testOverlapScore();
 testPeerReviewReport();
 testReproducibilityReport();
 testResearchGapFeed();
+testWorkflowOrchestration();
 testAssistantPacket();
 
 console.log("research-reproducibility-intelligence tests passed");

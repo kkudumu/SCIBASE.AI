@@ -41,6 +41,13 @@
     { "name": "pandas", "version": "2.2.2" },
     { "name": "scipy", "version": "1.13.0" }
   ],
+  "workflowPreferences": {
+    "reviewOwner": "Dr. Chen",
+    "reproducibilityOwner": "Replication Desk",
+    "strategyOwner": "Research Strategy",
+    "publicationOwner": "Corresponding Author",
+    "deadline": "2026-05-28"
+  },
   "reproducibilityAttempts": [
     {
       "id": "attempt-2026-04-dry-run",

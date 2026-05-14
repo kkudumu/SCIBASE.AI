@@ -65,6 +65,7 @@ function normalizeProject(project) {
     corpus: asArray(project.corpus),
     interests: asArray(project.interests),
     reproducibilityAttempts: asArray(project.reproducibilityAttempts),
+    workflowPreferences: project.workflowPreferences || {},
   };
 }
 
@@ -291,11 +292,182 @@ function buildSuggestedDirection(project, paper) {
   return `Investigate ${anchor} with a replication-ready protocol and explicitly report negative or null results.`;
 }
 
+function severityWeight(severity) {
+  return severity === "high" ? 3 : severity === "medium" ? 2 : 1;
+}
+
+function actionHash(projectId, action) {
+  return fingerprint({
+    projectId,
+    id: action.id,
+    source: action.source,
+    evidence: action.evidence,
+    recommendation: action.recommendation,
+  });
+}
+
+function buildAction(project, action) {
+  return {
+    ...action,
+    evidenceHash: actionHash(project.id, action),
+  };
+}
+
+function workflowOwner(project, ownerKey, fallback) {
+  return project.workflowPreferences[ownerKey] || fallback;
+}
+
+function uniqueStrings(values) {
+  return [...new Set(values)];
+}
+
+function buildWorkflowOrchestration(projectInput) {
+  const project = normalizeProject(projectInput);
+  const peerReview = buildPeerReviewReport(project);
+  const reproducibility = buildReproducibilityReport(project);
+  const researchGaps = buildResearchGapFeed(project);
+
+  const reviewActions = peerReview.findings.map((finding, index) =>
+    buildAction(project, {
+      id: `review-${index + 1}`,
+      stage: "peer-review",
+      source: finding.type,
+      title: `Resolve ${finding.type} finding`,
+      owner: workflowOwner(project, "reviewOwner", "editorial lead"),
+      severity: finding.severity,
+      priority: severityWeight(finding.severity) * 20,
+      status: finding.severity === "high" ? "blocking" : "queued",
+      evidence: finding.evidence,
+      recommendation: finding.suggestion,
+      dependsOn: [],
+    }),
+  );
+
+  const failedReproChecks = reproducibility.checks.filter((check) => !check.passed);
+  const reproActions = [
+    ...failedReproChecks.map((check, index) =>
+      buildAction(project, {
+        id: `repro-${index + 1}`,
+        stage: "reproducibility",
+        source: check.id,
+        title: `Fix reproducibility gate: ${check.id}`,
+        owner: workflowOwner(project, "reproducibilityOwner", "reproducibility reviewer"),
+        severity: "high",
+        priority: 55,
+        status: "blocking",
+        evidence: check.detail,
+        recommendation: `Complete and re-run the ${check.id} check.`,
+        dependsOn: reviewActions.filter((action) => action.status === "blocking").map((action) => action.id),
+      }),
+    ),
+    buildAction(project, {
+      id: "repro-runbook",
+      stage: "reproducibility",
+      source: "runbook",
+      title: "Attach clean-room rerun evidence",
+      owner: workflowOwner(project, "reproducibilityOwner", "reproducibility reviewer"),
+      severity: reproducibility.status === "reproducible" ? "low" : "medium",
+      priority: reproducibility.status === "reproducible" ? 18 : 38,
+      status: reproducibility.status === "reproducible" ? "ready" : "queued",
+      evidence: reproducibility.linkedAttempts[0]
+        ? `${reproducibility.linkedAttempts[0].id}:${reproducibility.linkedAttempts[0].status}`
+        : "no linked attempt",
+      recommendation: reproducibility.runbook.join(" "),
+      dependsOn: failedReproChecks.map((_, index) => `repro-${index + 1}`),
+    }),
+  ];
+
+  const gapActions = researchGaps.slice(0, 3).map((gap, index) =>
+    buildAction(project, {
+      id: `gap-${index + 1}`,
+      stage: "gap-finder",
+      source: gap.paperId,
+      title: `Evaluate research opportunity: ${gap.title}`,
+      owner: workflowOwner(project, "strategyOwner", "research strategy lead"),
+      severity: gap.priority >= 0.75 ? "medium" : "low",
+      priority: Math.round(gap.priority * 50),
+      status: "queued",
+      evidence: `${gap.paperId}:${gap.priority}`,
+      recommendation: gap.suggestedDirection,
+      dependsOn: ["repro-runbook"],
+    }),
+  );
+
+  const publicationAction = buildAction(project, {
+    id: "publication-readiness",
+    stage: "publication-readiness",
+    source: "assistant-packet",
+    title: "Prepare reviewer handoff packet",
+    owner: workflowOwner(project, "publicationOwner", "corresponding author"),
+    severity: "medium",
+    priority: 34,
+    status: peerReview.findings.some((finding) => finding.severity === "high") ? "blocked" : "queued",
+    evidence: `peer:${peerReview.score};repro:${reproducibility.status};gaps:${researchGaps.length}`,
+    recommendation: "Bundle peer-review fixes, reproducibility evidence, and selected research-gap notes for review.",
+    dependsOn: [
+      ...reviewActions.filter((action) => action.status === "blocking").map((action) => action.id),
+      "repro-runbook",
+    ],
+  });
+
+  const actions = [...reviewActions, ...reproActions, ...gapActions, publicationAction].sort((a, b) => {
+    if (a.status === "blocking" && b.status !== "blocking") return -1;
+    if (a.status !== "blocking" && b.status === "blocking") return 1;
+    return b.priority - a.priority;
+  });
+
+  const blocked = actions.some((action) => ["blocking", "blocked"].includes(action.status));
+  const riskScore = Math.min(
+    100,
+    actions.reduce((sum, action) => {
+      const statusPenalty = action.status === "blocking" ? 12 : action.status === "blocked" ? 8 : 0;
+      return sum + severityWeight(action.severity) * 4 + statusPenalty;
+    }, Math.round((1 - reproducibility.confidenceScore) * 25)),
+  );
+
+  return {
+    projectId: project.id,
+    blocked,
+    readyForInternalReview: !blocked && peerReview.score >= 70 && reproducibility.confidenceScore >= 0.8,
+    riskScore,
+    deadline: project.workflowPreferences.deadline || null,
+    stages: [
+      summarizeStage("peer-review", actions),
+      summarizeStage("reproducibility", actions),
+      summarizeStage("gap-finder", actions),
+      summarizeStage("publication-readiness", actions),
+    ],
+    actions,
+    orchestrationHash: fingerprint({
+      projectId: project.id,
+      actions: actions.map((action) => ({
+        id: action.id,
+        status: action.status,
+        evidenceHash: action.evidenceHash,
+        dependsOn: action.dependsOn,
+      })),
+      riskScore,
+    }),
+  };
+}
+
+function summarizeStage(stage, actions) {
+  const stageActions = actions.filter((action) => action.stage === stage);
+  const blocked = stageActions.some((action) => ["blocking", "blocked"].includes(action.status));
+  return {
+    stage,
+    actionCount: stageActions.length,
+    blocked,
+    topActionId: stageActions[0] ? stageActions[0].id : null,
+  };
+}
+
 function buildAssistantPacket(projectInput) {
   const project = normalizeProject(projectInput);
   const peerReview = buildPeerReviewReport(project);
   const reproducibility = buildReproducibilityReport(project);
   const researchGaps = buildResearchGapFeed(project);
+  const workflow = buildWorkflowOrchestration(project);
 
   const readinessScore = Math.round(
     peerReview.score * 0.45 + reproducibility.confidenceScore * 100 * 0.35 + Math.min(researchGaps.length, 5) * 4,
@@ -312,14 +484,16 @@ function buildAssistantPacket(projectInput) {
     peerReview,
     reproducibility,
     researchGaps,
-    nextActions: [
+    workflow,
+    nextActions: uniqueStrings([
+      ...workflow.actions.slice(0, 3).map((action) => action.recommendation),
       ...peerReview.findings.slice(0, 3).map((finding) => finding.suggestion),
       ...reproducibility.checks
         .filter((check) => !check.passed)
         .slice(0, 2)
         .map((check) => `Address reproducibility check: ${check.detail}.`),
       ...researchGaps.slice(0, 2).map((gap) => gap.suggestedDirection),
-    ],
+    ]),
   };
 }
 
@@ -329,6 +503,7 @@ module.exports = {
   buildPeerReviewReport,
   buildResearchGapFeed,
   buildReproducibilityReport,
+  buildWorkflowOrchestration,
   fingerprint,
   normalizeProject,
   overlapScore,

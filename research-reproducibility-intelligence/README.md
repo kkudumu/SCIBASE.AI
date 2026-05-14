@@ -10,7 +10,8 @@ This module turns a scientific project packet into a deterministic assistant rep
 - Reproducibility report with artifact fingerprinting, pinned dependency checks, runnable file detection, data dictionary/source data checks, and a runbook.
 - Linked prior reproducibility attempts, sorted by current artifact fingerprint match and recency.
 - Research-gap feed that ranks corpus items by relevance, replication gap, limitation signals, and novelty.
-- Combined assistant packet with readiness score and next-action queue.
+- Workflow orchestration that converts findings into staged, owner-assigned, evidence-hashed actions.
+- Combined assistant packet with readiness score, orchestration status, and next-action queue.
 - Sample project fixture, tests, requirement mapping, CLI demo, and short demo GIF.
 
 ## Run
@@ -30,6 +31,14 @@ Expected demo shape:
   "readinessScore": 71,
   "peerReviewScore": 62,
   "reproducibilityStatus": "reproducible",
+  "workflowBlocked": true,
+  "workflowRiskScore": 88,
+  "topWorkflowAction": {
+    "id": "review-1",
+    "stage": "peer-review",
+    "status": "blocking",
+    "owner": "Dr. Chen"
+  },
   "linkedAttempt": {
     "id": "attempt-2026-04-dry-run",
     "matchesCurrentArtifacts": true

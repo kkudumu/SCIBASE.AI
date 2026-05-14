@@ -12,7 +12,8 @@ The issue asks for entity extraction, linked graph data, graph navigation, entit
 - Knowledge graph nodes and edges for authorship, affiliation, datasets, protocols, tools, citations, funding, and related projects.
 - Entity pages with inbound/outbound links, usage contexts, citation counts, and stable hashes.
 - Graph navigation filters by node type, domain, citation count, reproducibility status, and text.
-- Recommendation digest ranked from user interests, concept matches, citation signals, and verified reproducibility.
+- Traceable research journeys that walk concept/dataset nodes through projects, datasets, tools, authors, and collaborators.
+- Recommendation digest ranked from user interests, concept matches, citation signals, verified reproducibility, and supporting evidence edges.
 - API route contracts for graph entities, entity details, semantic search, and recommendations.
 - Sample corpus fixture, tests, requirement map, CLI demo, and short demo GIF.
 
@@ -35,6 +36,11 @@ Expected demo shape:
   "verifiedProjects": [
     "Coastal flooding microbiome atlas",
     "Reusable Jupyter protocol patterns for open science"
+  ],
+  "researchJourneys": [
+    {
+      "startEntityId": "concept:crispr"
+    }
   ],
   "recommendationsForMaya": [
     {

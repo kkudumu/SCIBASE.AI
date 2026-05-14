@@ -6,6 +6,7 @@ const {
   buildEntityPage,
   buildKnowledgeGraph,
   buildKnowledgeGraphPacket,
+  buildResearchJourney,
   extractDois,
   extractEntitiesFromProject,
   queryGraph,
@@ -48,6 +49,17 @@ function testRecommendations() {
   assert.ok(recommendations.length > 0);
   assert.strictEqual(recommendations[0].projectId, "project:crispr-neuro-screen");
   assert.ok(recommendations[0].reasons.some((reason) => reason.includes("crispr")));
+  assert.ok(recommendations[0].evidenceEdges.some((edge) => edge.relation === "mentions-concept"));
+}
+
+function testResearchJourneys() {
+  const graph = buildKnowledgeGraph(corpus);
+  const journey = buildResearchJourney(graph, "concept:crispr", 2);
+
+  assert.strictEqual(journey.startEntityId, "concept:crispr");
+  assert.ok(journey.steps.some((step) => step.to === "project:crispr-neuro-screen"));
+  assert.ok(journey.steps.some((step) => step.toType === "dataset"));
+  assert.ok(journey.journeyHash.length >= 12);
 }
 
 function testPacket() {
@@ -56,6 +68,7 @@ function testPacket() {
   assert.ok(packet.supportedEntityTypes.includes("protocol"));
   assert.ok(packet.supportedRelationTypes.includes("mentions-concept"));
   assert.strictEqual(packet.navigationExamples.length, 3);
+  assert.strictEqual(packet.researchJourneys.length, 2);
   assert.strictEqual(packet.recommendationDigest.length, corpus.userProfiles.length);
   assert.ok(packet.packetHash.length >= 12);
 }
@@ -64,6 +77,7 @@ testExtraction();
 testGraphConstruction();
 testEntityPagesAndNavigation();
 testRecommendations();
+testResearchJourneys();
 testPacket();
 
 console.log("knowledge-graph-navigator tests passed");

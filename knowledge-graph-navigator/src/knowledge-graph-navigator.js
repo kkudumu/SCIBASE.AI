@@ -255,10 +255,20 @@ function recommendResearch(corpusInput, userId, limit = 5) {
     const citationBonus = Math.min(15, Number(project.citationCount || 0) / 4);
     const score = Number((conceptMatches.length * 12 + reproducibilityBonus + citationBonus).toFixed(4));
     if (score > 0) {
+      const evidenceEdges = projectEdges
+        .filter((edge) =>
+          ["mentions-concept", "uses-dataset", "uses-protocol", "uses-tool", "cites-reference"].includes(edge.relation),
+        )
+        .map((edge) => ({
+          relation: edge.relation,
+          target: edge.target,
+          evidence: edge.evidence,
+        }));
       recommendations.push({
         projectId: project.id,
         title: project.label,
         score,
+        evidenceEdges,
         reasons: [
           ...conceptMatches.map((edge) => `Matches interest ${edge.target.replace("concept:", "")}`),
           ...(reproducibilityBonus ? ["Verified reproducibility"] : []),
@@ -269,6 +279,44 @@ function recommendResearch(corpusInput, userId, limit = 5) {
   }
 
   return recommendations.sort((left, right) => right.score - left.score || left.title.localeCompare(right.title)).slice(0, limit);
+}
+
+function buildResearchJourney(graphInput, startEntityId, maxHops = 3) {
+  const graph = graphInput.nodes ? graphInput : buildKnowledgeGraph(graphInput);
+  const visited = new Set([startEntityId]);
+  const steps = [];
+  let frontier = [startEntityId];
+
+  for (let hop = 1; hop <= maxHops && frontier.length > 0; hop += 1) {
+    const next = [];
+    for (const entityId of frontier) {
+      const connected = graph.edges.filter((edge) => edge.source === entityId || edge.target === entityId);
+      for (const edge of connected) {
+        const targetId = edge.source === entityId ? edge.target : edge.source;
+        if (visited.has(targetId)) continue;
+        const target = graph.nodes.find((node) => node.id === targetId);
+        if (!target) continue;
+        visited.add(targetId);
+        next.push(targetId);
+        steps.push({
+          hop,
+          from: entityId,
+          relation: edge.relation,
+          to: targetId,
+          toType: target.type,
+          label: target.label,
+          evidence: edge.evidence,
+        });
+      }
+    }
+    frontier = next;
+  }
+
+  return {
+    startEntityId,
+    steps,
+    journeyHash: hashRecord({ startEntityId, steps }),
+  };
 }
 
 function buildKnowledgeGraphPacket(corpusInput) {
@@ -292,6 +340,10 @@ function buildKnowledgeGraphPacket(corpusInput) {
       queryGraph(graph, { type: "project", reproducibility: "verified" }),
       queryGraph(graph, { text: "CRISPR" }),
     ],
+    researchJourneys: [
+      buildResearchJourney(graph, "concept:crispr", 2),
+      buildResearchJourney(graph, "dataset:dataset-flood-samples", 2),
+    ],
     recommendationDigest,
     apiRoutes: [
       "GET /knowledge-graph/entities",
@@ -309,6 +361,7 @@ module.exports = {
   buildEntityPage,
   buildKnowledgeGraph,
   buildKnowledgeGraphPacket,
+  buildResearchJourney,
   extractDois,
   extractEntitiesFromProject,
   hashRecord,

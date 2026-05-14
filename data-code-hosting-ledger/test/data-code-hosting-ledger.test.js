@@ -9,6 +9,7 @@ const {
   buildPreservationPackage,
   buildSandboxPolicy,
   buildStorageManifest,
+  buildUploadWorkflowPlan,
   classifyArtifact,
   createPreviewPlan,
   diffDatasetVersions,
@@ -57,6 +58,18 @@ function testPreviewsAndDiffs() {
   assert.strictEqual(diff.changed.length, 1);
 }
 
+function testUploadWorkflowPlan() {
+  const upload = buildUploadWorkflowPlan(workspace);
+
+  assert.strictEqual(upload.workspaceId, workspace.id);
+  assert.ok(upload.dropZones.some((zone) => zone.id === "datasets" && zone.folder === "data"));
+  assert.ok(upload.folderRules.some((rule) => rule.folder === "data"));
+  assert.ok(upload.uploadTargets.some((target) => target.route.includes("/uploads/artifact-samples-v1/chunks")));
+  assert.ok(upload.uploadTargets.every((target) => target.resumable));
+  assert.ok(upload.uploadTargets.find((target) => target.artifactId === "artifact-samples-v1").validation.requireTags);
+  assert.ok(upload.workflowHash.length >= 12);
+}
+
 function testExecutionPlan() {
   const runtime = resolveRuntimeEnvironment(workspace, "artifact-notebook");
   const plan = buildExecutionPlan(workspace);
@@ -98,6 +111,8 @@ function testPacket() {
 
   assert.strictEqual(packet.workspace.id, workspace.id);
   assert.ok(packet.apiRoutes.some((route) => route.includes("fair-score")));
+  assert.ok(packet.apiRoutes.some((route) => route.includes("uploads/:artifactId/chunks")));
+  assert.ok(packet.uploadWorkflow.dropZones.length >= 3);
   assert.ok(packet.apiRoutes.some((route) => route.includes("preservation-package")));
   assert.strictEqual(packet.preservation.workspaceId, workspace.id);
   assert.ok(packet.packetHash.length >= 12);
@@ -106,6 +121,7 @@ function testPacket() {
 testStorageManifest();
 testMetadataAndFairScore();
 testPreviewsAndDiffs();
+testUploadWorkflowPlan();
 testExecutionPlan();
 testSandboxPolicy();
 testPreservationPackage();

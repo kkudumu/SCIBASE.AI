@@ -23,6 +23,13 @@ console.log(
       artifacts: packet.manifest.artifacts.length,
       categories: packet.manifest.categories,
       fairScore: packet.fair.total,
+      uploadWorkflow: {
+        dropZones: packet.uploadWorkflow.dropZones.map((zone) => zone.id),
+        uploadTargets: packet.uploadWorkflow.uploadTargets.length,
+        firstTargetRoute: packet.uploadWorkflow.uploadTargets[0]
+          ? packet.uploadWorkflow.uploadTargets[0].route
+          : null,
+      },
       previewKinds: Array.from(new Set(packet.previews.map((preview) => preview.preview))).sort(),
       runtimes: packet.execution.runtimes.map((runtime) => `${runtime.stack}:${runtime.image}`),
       sandboxPolicies: packet.execution.runtimes.map((runtime) => ({

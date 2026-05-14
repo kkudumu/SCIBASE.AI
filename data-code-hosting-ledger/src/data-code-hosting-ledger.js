@@ -99,6 +99,48 @@ function buildStorageManifest(workspaceInput) {
   };
 }
 
+function buildUploadWorkflowPlan(workspaceInput) {
+  const workspace = normalizeWorkspace(workspaceInput);
+  const manifest = buildStorageManifest(workspace);
+  const folderRules = manifest.folders.map((folder) => ({
+    folder,
+    acceptedCategories: Array.from(
+      new Set(
+        manifest.artifacts
+          .filter((artifact) => String(artifact.path).startsWith(`${folder}/`) || folder === "root")
+          .map((artifact) => artifact.category),
+      ),
+    ).sort(),
+  }));
+  const uploadTargets = manifest.artifacts.map((artifact) => ({
+    artifactId: artifact.id,
+    path: artifact.path,
+    folder: String(artifact.path).includes("/") ? String(artifact.path).split("/")[0] : "root",
+    acceptedExtension: artifact.extension,
+    expectedContentHash: artifact.contentHash,
+    maxChunkBytes: 8 * 1024 * 1024,
+    resumable: true,
+    validation: {
+      requireContentHash: true,
+      requireVersion: true,
+      requireTags: artifact.category === "dataset" || artifact.category === "model",
+    },
+    route: `POST /workspaces/${workspace.id}/uploads/${artifact.id}/chunks`,
+  }));
+
+  return {
+    workspaceId: workspace.id,
+    dropZones: [
+      { id: "datasets", folder: "data", accepts: [".csv", ".tsv", ".xlsx", ".json", ".parquet"] },
+      { id: "code", folder: "code", accepts: [".py", ".r", ".jl", ".ipynb"] },
+      { id: "supplements", folder: "figures", accepts: [".png", ".jpg", ".mp4", ".pt", ".h5"] },
+    ],
+    folderRules,
+    uploadTargets,
+    workflowHash: hashRecord({ workspaceId: workspace.id, folderRules, uploadTargets }),
+  };
+}
+
 function buildMetadataBundle(workspaceInput) {
   const workspace = normalizeWorkspace(workspaceInput);
   const metadata = workspace.metadata;
@@ -384,6 +426,7 @@ function buildHostingPacket(workspaceInput) {
   const metadata = buildMetadataBundle(workspace);
   const fair = scoreFairCompliance(workspace);
   const previews = createPreviewPlan(workspace);
+  const uploadWorkflow = buildUploadWorkflowPlan(workspace);
   const execution = buildExecutionPlan(workspace);
   const preservation = buildPreservationPackage(workspace);
 
@@ -395,18 +438,21 @@ function buildHostingPacket(workspaceInput) {
     manifest,
     metadata,
     fair,
+    uploadWorkflow,
     previews,
     execution,
     preservation,
     apiRoutes: [
       `POST /workspaces/${workspace.id}/artifacts`,
+      `POST /workspaces/${workspace.id}/uploads/:artifactId/chunks`,
+      `POST /workspaces/${workspace.id}/uploads/:artifactId/complete`,
       `GET /workspaces/${workspace.id}/artifacts/:artifactId/preview`,
       `GET /workspaces/${workspace.id}/metadata/datacite`,
       `GET /workspaces/${workspace.id}/preservation-package`,
       `POST /workspaces/${workspace.id}/runs`,
       `GET /workspaces/${workspace.id}/fair-score`,
     ],
-    packetHash: hashRecord({ manifest, metadata, fair, previews, execution, preservation }),
+    packetHash: hashRecord({ manifest, metadata, fair, uploadWorkflow, previews, execution, preservation }),
   };
 }
 
@@ -419,6 +465,7 @@ module.exports = {
   buildPreservationPackage,
   buildSandboxPolicy,
   buildStorageManifest,
+  buildUploadWorkflowPlan,
   classifyArtifact,
   createPreviewPlan,
   diffDatasetVersions,

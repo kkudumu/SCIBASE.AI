@@ -8,6 +8,7 @@ The issue asks for first-class hosting of datasets, code, notebooks, models, met
 
 - Artifact classification for datasets, code, notebooks, images, videos, model files, and unknown files.
 - Folder-aware storage manifest with content hashes, versions, tags, category counts, and total bytes.
+- Drag-and-drop upload workflow planning with drop zones, folder routing, resumable chunk routes, expected hashes, and validation rules.
 - Metadata bundle with JSON-LD, DataCite-style metadata, and schema.org fields.
 - FAIR compliance scoring across findable, accessible, interoperable, and reusable dimensions.
 - Preview route planning for spreadsheets, JSON, notebooks, code, thumbnails, and model cards.
@@ -34,6 +35,10 @@ Expected demo shape:
 {
   "artifacts": 6,
   "fairScore": 0.9417,
+  "uploadWorkflow": {
+    "dropZones": ["datasets", "code", "supplements"],
+    "uploadTargets": 6
+  },
   "previewKinds": ["code", "image-thumbnail", "model-card", "notebook", "spreadsheet"],
   "runtimes": ["python:python:3.12-slim"],
   "sandboxPolicies": [
@@ -66,7 +71,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/data-code-hosting-ledger.js` - artifact classification, manifests, metadata, FAIR score, previews, diffs, runtimes, sandbox policies, preservation packages.
+- `src/data-code-hosting-ledger.js` - artifact classification, manifests, upload workflows, metadata, FAIR score, previews, diffs, runtimes, sandbox policies, preservation packages.
 - `data/sample-workspace.json` - reviewable scientific workspace fixture.
 - `test/data-code-hosting-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

@@ -6,6 +6,7 @@ This module implements a deterministic scientific data and code hosting mileston
 | --- | --- |
 | Support major scientific file types | `FILE_TYPES` and `classifyArtifact()` cover CSV, TSV, XLSX, JSON, Parquet, Python, R, Julia, notebooks, images, video, and model files. |
 | Folder-based organization and upload manifest | `buildStorageManifest()` groups artifacts by folder, category, size, version, content hash, and tags. |
+| Drag-and-drop uploads | `buildUploadWorkflowPlan()` emits dataset/code/supplement drop zones, accepted extensions, folder routing, resumable chunk upload routes, expected hashes, and validation rules. |
 | Metadata-aware previews | `createPreviewPlan()` emits preview routes for spreadsheets, JSON, notebooks, code, images, video, and model cards. |
 | Upload versioning and dataset diffing | Artifact versions are tracked in the manifest, and `diffDatasetVersions()` reports added, removed, and changed rows. |
 | JSON-LD, DataCite, and schema.org metadata | `buildMetadataBundle()` emits JSON-LD, DataCite-style, and schema.org metadata from workspace metadata. |

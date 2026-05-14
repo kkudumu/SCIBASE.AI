@@ -44,6 +44,7 @@ function normalizeWorkspace(workspace) {
     apiKeys: asArray(workspace.apiKeys),
     auditLog: asArray(workspace.auditLog),
     exportTargets: asArray(workspace.exportTargets),
+    procurement: workspace.procurement || {},
   };
 }
 
@@ -259,6 +260,7 @@ function buildAdminDashboard(workspaceInput) {
   const compliance = evaluateCompliance(workspace);
   const apiCatalog = buildApiCatalog(workspace);
   const exportPipelines = buildExportPipelineCatalog(workspace);
+  const procurement = buildProcurementReadinessReport(workspace);
 
   return {
     workspace: {
@@ -276,11 +278,62 @@ function buildAdminDashboard(workspaceInput) {
     compliance,
     integrations: apiCatalog,
     exportPipelines,
+    procurement,
     nextActions: compliance.failedChecks.map((check) => ({
       checkId: check.id,
       title: check.label,
       remediation: check.remediation,
     })),
+  };
+}
+
+function buildProcurementReadinessReport(workspaceInput) {
+  const workspace = normalizeWorkspace(workspaceInput);
+  const analytics = computeUsageAnalytics(workspace);
+  const apiCatalog = buildApiCatalog(workspace);
+  const exportPipelines = buildExportPipelineCatalog(workspace);
+  const evidence = workspace.procurement.evidence || {};
+  const requirements = {
+    samlConfigured: Boolean(evidence.samlConfigured),
+    dpaSigned: Boolean(evidence.dpaSigned),
+    securityQuestionnaireComplete: Boolean(evidence.securityQuestionnaireComplete),
+    slaHours: Number(evidence.slaHours || 0),
+    auditLogCoverage: analytics.auditLogCoverage,
+    webhookFailureRate: analytics.webhookFailureRate,
+    activeKeyRotationDaysMax: Number(evidence.activeKeyRotationDaysMax || 90),
+    exportTargetsReady: exportPipelines.every((pipeline) => pipeline.blockedProjects.length === 0),
+  };
+  const staleKeys = apiCatalog.filter((integration) => {
+    if (!integration.lastRotatedAt) return true;
+    const rotatedAt = new Date(integration.lastRotatedAt);
+    if (Number.isNaN(rotatedAt.getTime())) return true;
+    const asOf = workspace.procurement.asOf ? new Date(workspace.procurement.asOf) : new Date();
+    const ageDays = Math.floor((asOf.getTime() - rotatedAt.getTime()) / (1000 * 60 * 60 * 24));
+    return ageDays > requirements.activeKeyRotationDaysMax;
+  });
+  const blockers = [];
+  if (!requirements.samlConfigured) blockers.push("saml-not-configured");
+  if (!requirements.dpaSigned) blockers.push("dpa-not-signed");
+  if (!requirements.securityQuestionnaireComplete) blockers.push("security-questionnaire-incomplete");
+  if (requirements.slaHours > 24 || requirements.slaHours <= 0) blockers.push("sla-missing-or-too-slow");
+  if (requirements.auditLogCoverage < DEFAULT_POLICY.minAuditLogCoverage) blockers.push("audit-log-coverage-low");
+  if (requirements.webhookFailureRate > DEFAULT_POLICY.maxWebhookFailureRate) blockers.push("webhook-failure-rate-high");
+  if (staleKeys.length) blockers.push("api-key-rotation-stale");
+  if (!requirements.exportTargetsReady) blockers.push("export-pipeline-metadata-incomplete");
+
+  return {
+    status: blockers.length ? "blocked" : "ready-for-procurement-review",
+    buyer: workspace.procurement.buyer || null,
+    renewalDate: workspace.procurement.renewalDate || null,
+    requirements,
+    staleIntegrations: staleKeys.map((integration) => integration.id),
+    blockers,
+    approvalRoute: `/enterprise/${workspace.id}/procurement/approve`,
+    procurementHash: crypto
+      .createHash("sha256")
+      .update(JSON.stringify({ workspaceId: workspace.id, requirements, blockers }))
+      .digest("hex")
+      .slice(0, 18),
   };
 }
 
@@ -312,6 +365,7 @@ function packageComplianceExport(workspaceInput) {
       incidents: workspace.incidents.length,
       auditEntries: workspace.auditLog.length,
       exportTargets: exportPipelines.length,
+      procurementStatus: dashboard.procurement.status,
     },
   };
 }
@@ -337,6 +391,7 @@ module.exports = {
   buildApiCatalog,
   buildEnterpriseTrustCenter,
   buildExportPipelineCatalog,
+  buildProcurementReadinessReport,
   computeUsageAnalytics,
   evaluateCompliance,
   generateWebhookEvents,

@@ -120,5 +120,17 @@
     { "id": "audit-001", "action": "project.created", "actorId": "u-002" },
     { "id": "audit-002", "action": "integration.connected", "actorId": "u-001" },
     { "id": "audit-003", "action": "export.generated", "actorId": "u-001" }
-  ]
+  ],
+  "procurement": {
+    "asOf": "2026-05-14T00:00:00Z",
+    "buyer": "Borealis IT Procurement",
+    "renewalDate": "2026-09-01",
+    "evidence": {
+      "samlConfigured": true,
+      "dpaSigned": true,
+      "securityQuestionnaireComplete": false,
+      "slaHours": 48,
+      "activeKeyRotationDaysMax": 30
+    }
+  }
 }

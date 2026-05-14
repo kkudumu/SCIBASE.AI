@@ -7,6 +7,7 @@ const {
   buildApiCatalog,
   buildEnterpriseTrustCenter,
   buildExportPipelineCatalog,
+  buildProcurementReadinessReport,
   computeUsageAnalytics,
   evaluateCompliance,
   packageComplianceExport,
@@ -66,8 +67,47 @@ function testDashboardAndExport() {
   assert.strictEqual(dashboard.nextActions.length, 4);
   assert.strictEqual(complianceExport.complianceStatus, "blocked");
   assert.strictEqual(complianceExport.evidenceManifest.exportTargets, 3);
+  assert.strictEqual(complianceExport.evidenceManifest.procurementStatus, "blocked");
   assert.strictEqual(complianceExport.evidenceManifest.auditEntries, 3);
   assert.strictEqual(complianceExport.auditSummary["integration.connected"], 1);
+}
+
+function testProcurementReadiness() {
+  const report = buildProcurementReadinessReport(sampleWorkspace);
+  const ready = buildProcurementReadinessReport({
+    ...sampleWorkspace,
+    projects: sampleWorkspace.projects.map((project) => ({
+      ...project,
+      auditLogEnabled: true,
+      exportMetadata: {
+        doi: project.exportMetadata.doi || "10.5555/ready",
+        orcid: project.exportMetadata.orcid || "0000-0000-0000-0000",
+        license: project.exportMetadata.license || "CC-BY-4.0",
+        versionHistory: project.exportMetadata.versionHistory || true,
+        grantId: project.exportMetadata.grantId || "GRANT-READY",
+        openAccessStatus: "compliant",
+      },
+    })),
+    events: sampleWorkspace.events.map((event) => ({ ...event, status: "delivered" })),
+    procurement: {
+      ...sampleWorkspace.procurement,
+      evidence: {
+        samlConfigured: true,
+        dpaSigned: true,
+        securityQuestionnaireComplete: true,
+        slaHours: 12,
+        activeKeyRotationDaysMax: 90,
+      },
+    },
+  });
+
+  assert.strictEqual(report.status, "blocked");
+  assert.ok(report.blockers.includes("webhook-failure-rate-high"));
+  assert.ok(report.blockers.includes("export-pipeline-metadata-incomplete"));
+  assert.ok(report.approvalRoute.includes("/procurement/approve"));
+  assert.strictEqual(ready.status, "ready-for-procurement-review");
+  assert.deepStrictEqual(ready.blockers, []);
+  assert.ok(ready.procurementHash.length >= 12);
 }
 
 function testWebhookSigning() {
@@ -98,6 +138,7 @@ testCompliance();
 testApiCatalog();
 testExportPipelineCatalog();
 testDashboardAndExport();
+testProcurementReadiness();
 testWebhookSigning();
 testFullBuild();
 

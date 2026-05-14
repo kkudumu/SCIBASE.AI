@@ -9,6 +9,7 @@ This module is a focused milestone for SCIBASE issue #19, Enterprise Tooling. It
 | Secure API catalog | `buildApiCatalog()` lists connected integrations, scopes, owners, key rotation status, risk, and webhook endpoints. |
 | Webhooks | `generateWebhookEvents()` creates trust-center events and `signWebhookEvent()` signs payloads with HMAC SHA-256. |
 | Export pipelines | `buildExportPipelineCatalog()` models repository, journal, and funder-portal targets with formats, required metadata, ready projects, blocked projects, and preserved identifiers. `packageComplianceExport()` includes that catalog in the audit-ready export bundle. |
+| Enterprise procurement readiness | `buildProcurementReadinessReport()` checks SAML, DPA, security questionnaire, SLA, webhook health, API key rotation, export readiness, blockers, and approval route metadata for institutional review. |
 | Reviewer-friendly demo | `npm run demo` prints a deterministic trust-center summary from `data/sample-workspace.json`. |
 | Local verification | `npm run check` and `npm test` validate syntax and behavior without network calls. |
 

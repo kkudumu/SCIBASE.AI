@@ -19,6 +19,12 @@ const summary = {
     readyProjects: pipeline.readyProjectIds.length,
     blockedProjects: pipeline.blockedProjects.length,
   })),
+  procurement: {
+    status: trustCenter.dashboard.procurement.status,
+    buyer: trustCenter.dashboard.procurement.buyer,
+    blockers: trustCenter.dashboard.procurement.blockers,
+    approvalRoute: trustCenter.dashboard.procurement.approvalRoute,
+  },
   nextActions: trustCenter.dashboard.nextActions,
   firstSignedWebhook: {
     type: trustCenter.signedWebhookEvents[0].type,

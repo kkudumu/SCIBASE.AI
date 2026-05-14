@@ -11,6 +11,7 @@ The module gives institutional administrators a deterministic trust-center workf
 - Secure API catalog showing integration scopes, owners, active key counts, rotation timestamps, risk, and webhook endpoints.
 - HMAC-signed trust-center webhook events.
 - Export pipeline catalog for repositories, journal submission packages, and funder portals with required metadata checks.
+- Procurement readiness report for SAML, DPA, security questionnaire, SLA, webhook health, API-key rotation, export readiness, blockers, and approval route.
 - Compliance export bundle with evidence manifest and audit summary.
 - Sample workspace data, tests, and a deterministic CLI demo.
 
@@ -39,6 +40,10 @@ Expected demo shape:
       "blockedProjects": 2
     }
   ],
+  "procurement": {
+    "status": "blocked",
+    "buyer": "Borealis IT Procurement"
+  },
   "nextActions": [
     {
       "checkId": "mfa-coverage",
@@ -59,7 +64,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough of the dashboa
 
 ## Files
 
-- `src/trust-center.js` - core enterprise trust-center functions, including export pipeline readiness checks.
+- `src/trust-center.js` - core enterprise trust-center functions, including export pipeline and procurement readiness checks.
 - `data/sample-workspace.json` - reviewable institutional workspace fixture.
 - `test/trust-center.test.js` - dependency-free Node assertions.
 - `scripts/demo.js` - CLI demo for reviewer smoke testing.

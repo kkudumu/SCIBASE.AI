@@ -1,6 +1,6 @@
 # Issue #10 Requirement Map
 
-This module is a deterministic milestone for SCIBASE issue #10, Project Repository & Version Control. It focuses on repository manifests, content integrity, commit/tag metadata, forks, merge requests, reproducibility checks, citations, and export bundles.
+This module is a deterministic milestone for SCIBASE issue #10, Project Repository & Version Control. It focuses on repository manifests, content integrity, commit/tag metadata, forks, merge requests, reproducibility checks, release readiness, citations, and export bundles.
 
 | Issue requirement | Implementation |
 | --- | --- |
@@ -13,9 +13,10 @@ This module is a deterministic milestone for SCIBASE issue #10, Project Reposito
 | In-browser editors and diffs | `buildEditorDiffSummary()` maps components to scientific text, Jupyter notebook, structured-data, code-aware, or hash-only editor/diff modes. |
 | Visual revision timeline and rollback | `buildEditorDiffSummary()` emits a commit rollback timeline with deterministic restore commands. |
 | Reproducibility pipelines | `evaluateReproducibility()` reports execution environment, check pass rate, status, and reproducibility hash. |
+| Dataset diffs and release gates | `buildDatasetDiffSummary()` and `buildReleaseReadiness()` report data change risk plus required component, semantic tag, DOI, reproducibility, export API, and CLI gates before release. |
 | Repository identifiers and citation | `generateCitation()` produces APA and BibTeX-style citations from repository/tag metadata. |
 | Programmatic access and export | `buildExportBundle()` emits API routes, CLI commands, manifest, reproducibility status, and export bundle hash. |
-| Reviewer demo | `npm run demo` prints manifest, LFS components, reproducibility status, mergeability, citation, and bundle hash. |
+| Reviewer demo | `npm run demo` prints manifest, LFS components, reproducibility status, mergeability, release gates, citation, and bundle hash. |
 
 ## Verification
 

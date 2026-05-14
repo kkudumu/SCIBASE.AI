@@ -14,6 +14,7 @@ The issue asks for scientific project repositories with manifests, versioning, f
 - Merge-request evaluation for source/target existence, approvals, discussions, and reproducibility blockers.
 - Editor/diff summary for scientific text, Jupyter notebooks, structured data, code-aware diffs, and rollback commands.
 - Reproducibility run status with environment, check pass rate, and hash.
+- Release readiness packet with required component, semantic tag, DOI, reproducibility, dataset-diff risk, export API, and CLI gates.
 - Export bundle with manifest, reproducibility summary, API route list, CLI commands, and bundle hash.
 - Sample repository fixture, tests, requirement map, CLI demo, and short demo GIF.
 
@@ -37,6 +38,12 @@ Expected demo shape:
   "mergeableRequests": 1,
   "editorModes": ["scientific-text", "structured-data", "code-aware"],
   "rollbackCommand": "scibase restore repo-flood-microbiome --commit commit-2",
+  "releaseReadiness": {
+    "status": "ready",
+    "datasetDiffRisk": {
+      "mediumRiskCount": 1
+    }
+  },
   "bundleHash": "..."
 }
 ```
@@ -47,7 +54,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/repository-ledger.js` - manifests, commits, tags, forks, merge requests, reproducibility, citation, exports.
+- `src/repository-ledger.js` - manifests, commits, tags, forks, merge requests, reproducibility, release readiness, citation, exports.
 - `data/sample-repository.json` - reviewable scientific repository fixture.
 - `test/repository-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

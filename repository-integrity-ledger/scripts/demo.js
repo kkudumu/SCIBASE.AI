@@ -15,6 +15,18 @@ console.log(
       mergeableRequests: packet.mergeRequests.filter((request) => request.mergeable).length,
       editorModes: packet.editorDiff.componentEditors.map((item) => item.editorMode),
       rollbackCommand: packet.editorDiff.rollbackTimeline.at(-1).rollbackCommand,
+      releaseReadiness: {
+        status: packet.releaseReadiness.status,
+        gates: packet.releaseReadiness.gates.map((gate) => ({
+          id: gate.id,
+          status: gate.status,
+        })),
+        datasetDiffRisk: {
+          highRiskCount: packet.releaseReadiness.datasetDiffs.highRiskCount,
+          mediumRiskCount: packet.releaseReadiness.datasetDiffs.mediumRiskCount,
+        },
+        releaseHash: packet.releaseReadiness.releaseHash,
+      },
       citation: packet.citations.apa,
       bundleHash: packet.exportBundle.bundleHash,
     },

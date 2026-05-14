@@ -35,6 +35,7 @@ function normalizeRepository(repository) {
     forks: asArray(repository.forks),
     mergeRequests: asArray(repository.mergeRequests),
     reproducibilityRuns: asArray(repository.reproducibilityRuns),
+    releasePolicy: repository.releasePolicy || {},
   };
 }
 
@@ -280,11 +281,119 @@ function buildExportBundle(repositoryInput, tagId) {
   };
 }
 
+function buildDatasetDiffSummary(repositoryInput) {
+  const repository = normalizeRepository(repositoryInput);
+  const removalWarnThreshold = Number(repository.releasePolicy.datasetRemovalWarnThreshold || 100);
+  const dataDiffs = repository.components
+    .filter((component) => component.kind === "data")
+    .map((component) => {
+      const stats = component.diffStats || {};
+      const rowsAdded = Number(stats.rowsAdded || 0);
+      const rowsRemoved = Number(stats.rowsRemoved || 0);
+      const schemaChanged = Boolean(stats.schemaChanged);
+      const risk =
+        schemaChanged || rowsRemoved > removalWarnThreshold
+          ? "high"
+          : rowsAdded > 0 || rowsRemoved > 0 || Boolean(stats.hashChanged)
+            ? "medium"
+            : "low";
+
+      return {
+        componentId: component.id,
+        path: component.path,
+        rowsAdded,
+        rowsRemoved,
+        schemaChanged,
+        hashChanged: Boolean(stats.hashChanged),
+        risk,
+        diffHash: hashRecord({ id: component.id, path: component.path, stats }),
+      };
+    });
+
+  return {
+    dataDiffs,
+    highRiskCount: dataDiffs.filter((diff) => diff.risk === "high").length,
+    mediumRiskCount: dataDiffs.filter((diff) => diff.risk === "medium").length,
+    summaryHash: hashRecord(dataDiffs),
+  };
+}
+
+function buildReleaseReadiness(repositoryInput, tagId) {
+  const repository = normalizeRepository(repositoryInput);
+  const manifest = buildComponentManifest(repository);
+  const reproducibility = evaluateReproducibility(repository);
+  const datasetDiffs = buildDatasetDiffSummary(repository);
+  const requestedTagId = tagId || repository.releasePolicy.requiredTagId || (repository.tags.at(-1) && repository.tags.at(-1).id);
+  const tag = repository.tags.find((candidate) => candidate.id === requestedTagId || candidate.version === requestedTagId);
+  const exportBundle = tag ? buildExportBundle(repository, tag.id) : null;
+  const gates = [
+    {
+      id: "required-components",
+      status: manifest.missingRequiredKinds.length === 0 ? "pass" : "fail",
+      evidence: { missingRequiredKinds: manifest.missingRequiredKinds },
+    },
+    {
+      id: "semantic-tag",
+      status: tag ? "pass" : "fail",
+      evidence: { tagId: requestedTagId || null },
+    },
+    {
+      id: "doi-metadata",
+      status: tag && (tag.doi || repository.metadata.doi) ? "pass" : "fail",
+      evidence: { doi: tag ? tag.doi || repository.metadata.doi || null : null },
+    },
+    {
+      id: "reproducibility",
+      status: reproducibility.status === "passed" ? "pass" : "fail",
+      evidence: {
+        status: reproducibility.status,
+        runId: reproducibility.runId || null,
+        passRate: reproducibility.passRate || 0,
+      },
+    },
+    {
+      id: "dataset-diff-risk",
+      status: datasetDiffs.highRiskCount === 0 ? "pass" : "review",
+      evidence: {
+        highRiskCount: datasetDiffs.highRiskCount,
+        mediumRiskCount: datasetDiffs.mediumRiskCount,
+      },
+    },
+    {
+      id: "export-contract",
+      status: exportBundle && exportBundle.apiRoutes.length > 0 && exportBundle.cliCommands.length > 0 ? "pass" : "fail",
+      evidence: {
+        apiRoutes: exportBundle ? exportBundle.apiRoutes : [],
+        cliCommands: exportBundle ? exportBundle.cliCommands : [],
+      },
+    },
+  ];
+  const failed = gates.filter((gate) => gate.status === "fail");
+  const review = gates.filter((gate) => gate.status === "review");
+
+  return {
+    repositoryId: repository.id,
+    tagId: tag ? tag.id : null,
+    status: failed.length > 0 ? "blocked" : review.length > 0 ? "review" : "ready",
+    gates,
+    datasetDiffs,
+    exportBundle,
+    releaseHash: hashRecord({
+      repositoryId: repository.id,
+      tagId: tag && tag.id,
+      gates,
+      datasetDiffs: datasetDiffs.summaryHash,
+      exportBundle: exportBundle && exportBundle.bundleHash,
+    }),
+  };
+}
+
 function buildRepositoryIntegrityPacket(repositoryInput) {
   const repository = normalizeRepository(repositoryInput);
   const manifest = buildComponentManifest(repository);
   const reproducibility = evaluateReproducibility(repository);
   const latestTag = repository.tags.at(-1);
+  const releaseReadiness = latestTag ? buildReleaseReadiness(repository, latestTag.id) : buildReleaseReadiness(repository);
 
   return {
     repository: {
@@ -305,6 +414,7 @@ function buildRepositoryIntegrityPacket(repositoryInput) {
           bibtex: generateCitation(repository, latestTag.id, "bibtex"),
         }
       : null,
+    releaseReadiness,
     exportBundle: latestTag ? buildExportBundle(repository, latestTag.id) : null,
   };
 }
@@ -312,8 +422,10 @@ function buildRepositoryIntegrityPacket(repositoryInput) {
 module.exports = {
   REQUIRED_COMPONENTS,
   buildComponentManifest,
+  buildDatasetDiffSummary,
   buildEditorDiffSummary,
   buildExportBundle,
+  buildReleaseReadiness,
   buildForkRecord,
   buildRepositoryIntegrityPacket,
   createCommit,

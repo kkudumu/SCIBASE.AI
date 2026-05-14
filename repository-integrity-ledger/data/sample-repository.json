@@ -10,7 +10,19 @@
   },
   "components": [
     { "id": "c-manuscript", "kind": "manuscript", "path": "manuscript/main.md", "content": "# Coastal flooding microbiome atlas", "sizeBytes": 12000 },
-    { "id": "c-data", "kind": "data", "path": "data/samples.csv", "content": "sample,diversity", "sizeBytes": 25000000 },
+    {
+      "id": "c-data",
+      "kind": "data",
+      "path": "data/samples.csv",
+      "content": "sample,diversity",
+      "sizeBytes": 25000000,
+      "diffStats": {
+        "rowsAdded": 48,
+        "rowsRemoved": 2,
+        "schemaChanged": false,
+        "hashChanged": true
+      }
+    },
     { "id": "c-code", "kind": "code", "path": "code/analyze.py", "content": "print('analysis')", "sizeBytes": 2000 },
     { "id": "c-notebook", "kind": "notebooks", "path": "notebooks/run_analysis.ipynb", "content": "{}", "sizeBytes": 8000 },
     { "id": "c-results", "kind": "results", "path": "results/figure1.png", "content": "binary", "sizeBytes": 400000 },
@@ -80,5 +92,9 @@
         { "id": "results-hash", "status": "passed" }
       ]
     }
-  ]
+  ],
+  "releasePolicy": {
+    "requiredTagId": "preprint-v1",
+    "datasetRemovalWarnThreshold": 100
+  }
 }

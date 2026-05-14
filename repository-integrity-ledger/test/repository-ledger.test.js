@@ -4,9 +4,11 @@ const assert = require("assert");
 const repository = require("../data/sample-repository.json");
 const {
   buildComponentManifest,
+  buildDatasetDiffSummary,
   buildEditorDiffSummary,
   buildExportBundle,
   buildForkRecord,
+  buildReleaseReadiness,
   buildRepositoryIntegrityPacket,
   createCommit,
   createSemanticTag,
@@ -80,6 +82,33 @@ function testCitationAndExport() {
   assert.ok(bundle.bundleHash.length >= 12);
 }
 
+function testDatasetDiffSummary() {
+  const summary = buildDatasetDiffSummary(repository);
+
+  assert.strictEqual(summary.dataDiffs.length, 1);
+  assert.strictEqual(summary.dataDiffs[0].risk, "medium");
+  assert.strictEqual(summary.highRiskCount, 0);
+  assert.strictEqual(summary.mediumRiskCount, 1);
+  assert.ok(summary.summaryHash.length >= 12);
+}
+
+function testReleaseReadiness() {
+  const readiness = buildReleaseReadiness(repository, "preprint-v1");
+  const blocked = buildReleaseReadiness({
+    ...repository,
+    tags: [],
+    reproducibilityRuns: [{ id: "run-empty", checks: [] }],
+  }, "missing-tag");
+
+  assert.strictEqual(readiness.status, "ready");
+  assert.strictEqual(readiness.gates.every((gate) => gate.status === "pass"), true);
+  assert.strictEqual(readiness.datasetDiffs.mediumRiskCount, 1);
+  assert.ok(readiness.exportBundle.bundleHash);
+  assert.ok(readiness.releaseHash.length >= 12);
+  assert.strictEqual(blocked.status, "blocked");
+  assert.ok(blocked.gates.find((gate) => gate.id === "semantic-tag" && gate.status === "fail"));
+}
+
 function testEditorDiffSummary() {
   const summary = buildEditorDiffSummary(repository);
   const dataEditor = summary.componentEditors.find((item) => item.componentId === "c-data");
@@ -100,6 +129,7 @@ function testFullPacket() {
   assert.strictEqual(packet.mergeRequests[0].mergeable, true);
   assert.ok(packet.editorDiff.componentEditors.length >= 7);
   assert.ok(packet.citations.apa);
+  assert.strictEqual(packet.releaseReadiness.status, "ready");
   assert.ok(packet.exportBundle.bundleHash);
 }
 
@@ -108,6 +138,8 @@ testCommitAndTag();
 testForkRecord();
 testMergeRequestAndReproducibility();
 testCitationAndExport();
+testDatasetDiffSummary();
+testReleaseReadiness();
 testEditorDiffSummary();
 testFullPacket();
 

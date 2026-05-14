@@ -184,6 +184,61 @@ function evaluateReproducibility(repositoryInput) {
   };
 }
 
+function editorModeFor(component) {
+  const path = String(component.path || "").toLowerCase();
+  if (component.kind === "manuscript" || /\.(md|tex)$/.test(path)) return "scientific-text";
+  if (component.kind === "notebooks" || path.endsWith(".ipynb")) return "jupyter-notebook";
+  if (component.kind === "data" || /\.(csv|tsv|json|parquet)$/.test(path)) return "structured-data";
+  if (component.kind === "code" || /\.(py|r|jl|js|ts)$/.test(path)) return "code-aware";
+  return "binary-or-metadata";
+}
+
+function diffModeFor(component) {
+  const path = String(component.path || "").toLowerCase();
+  if (component.kind === "data" || /\.(csv|tsv|json|parquet)$/.test(path)) return "rich-data-diff";
+  if (component.kind === "notebooks" || path.endsWith(".ipynb")) return "notebook-output-diff";
+  if (component.kind === "code" || /\.(py|r|jl|js|ts)$/.test(path)) return "code-aware-diff";
+  if (component.kind === "manuscript" || /\.(md|tex)$/.test(path)) return "text-diff";
+  return "hash-only-diff";
+}
+
+function buildEditorDiffSummary(repositoryInput) {
+  const repository = normalizeRepository(repositoryInput);
+  const componentsById = new Map(repository.components.map((component) => [component.id, component]));
+  const componentEditors = repository.components.map((component) => ({
+    componentId: component.id,
+    path: component.path,
+    kind: component.kind,
+    editorMode: editorModeFor(component),
+    diffMode: diffModeFor(component),
+  }));
+  const mergeRequestDiffs = repository.mergeRequests.map((mergeRequest) => ({
+    mergeRequestId: mergeRequest.id,
+    changedComponents: asArray(mergeRequest.changedComponents).map((change) => {
+      const component = componentsById.get(change.id) || change;
+      return {
+        componentId: change.id,
+        kind: change.kind || component.kind,
+        diffMode: diffModeFor(component),
+      };
+    }),
+  }));
+  const rollbackTimeline = repository.commits.map((commit) => ({
+    commitId: commit.id,
+    parentId: commit.parentId || null,
+    message: commit.message,
+    createdAt: commit.createdAt,
+    rollbackCommand: `scibase restore ${repository.id} --commit ${commit.id}`,
+  }));
+
+  return {
+    componentEditors,
+    mergeRequestDiffs,
+    rollbackTimeline,
+    summaryHash: hashRecord({ componentEditors, mergeRequestDiffs, rollbackTimeline }),
+  };
+}
+
 function generateCitation(repositoryInput, tagId, style = "apa") {
   const repository = normalizeRepository(repositoryInput);
   const tag = repository.tags.find((candidate) => candidate.id === tagId || candidate.version === tagId);
@@ -239,6 +294,7 @@ function buildRepositoryIntegrityPacket(repositoryInput) {
     },
     manifest,
     reproducibility,
+    editorDiff: buildEditorDiffSummary(repository),
     forks: repository.forks,
     mergeRequests: repository.mergeRequests.map((mergeRequest) =>
       evaluateMergeRequest(repository, mergeRequest),
@@ -256,6 +312,7 @@ function buildRepositoryIntegrityPacket(repositoryInput) {
 module.exports = {
   REQUIRED_COMPONENTS,
   buildComponentManifest,
+  buildEditorDiffSummary,
   buildExportBundle,
   buildForkRecord,
   buildRepositoryIntegrityPacket,

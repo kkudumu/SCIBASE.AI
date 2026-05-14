@@ -12,6 +12,7 @@ The issue asks for scientific project repositories with manifests, versioning, f
 - Semantic tags with DOI metadata and citation generation.
 - Fork attribution records preserving source DOI, authors, base commit, and fork hash.
 - Merge-request evaluation for source/target existence, approvals, discussions, and reproducibility blockers.
+- Editor/diff summary for scientific text, Jupyter notebooks, structured data, code-aware diffs, and rollback commands.
 - Reproducibility run status with environment, check pass rate, and hash.
 - Export bundle with manifest, reproducibility summary, API route list, CLI commands, and bundle hash.
 - Sample repository fixture, tests, requirement map, CLI demo, and short demo GIF.
@@ -34,6 +35,8 @@ Expected demo shape:
   "lfsComponents": ["data/samples.csv"],
   "reproducibility": "passed",
   "mergeableRequests": 1,
+  "editorModes": ["scientific-text", "structured-data", "code-aware"],
+  "rollbackCommand": "scibase restore repo-flood-microbiome --commit commit-2",
   "bundleHash": "..."
 }
 ```

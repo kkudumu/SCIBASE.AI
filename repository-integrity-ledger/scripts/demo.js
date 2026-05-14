@@ -13,6 +13,8 @@ console.log(
       lfsComponents: packet.manifest.components.filter((component) => component.lfs).map((component) => component.path),
       reproducibility: packet.reproducibility.status,
       mergeableRequests: packet.mergeRequests.filter((request) => request.mergeable).length,
+      editorModes: packet.editorDiff.componentEditors.map((item) => item.editorMode),
+      rollbackCommand: packet.editorDiff.rollbackTimeline.at(-1).rollbackCommand,
       citation: packet.citations.apa,
       bundleHash: packet.exportBundle.bundleHash,
     },

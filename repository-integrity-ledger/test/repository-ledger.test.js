@@ -4,6 +4,7 @@ const assert = require("assert");
 const repository = require("../data/sample-repository.json");
 const {
   buildComponentManifest,
+  buildEditorDiffSummary,
   buildExportBundle,
   buildForkRecord,
   buildRepositoryIntegrityPacket,
@@ -79,11 +80,25 @@ function testCitationAndExport() {
   assert.ok(bundle.bundleHash.length >= 12);
 }
 
+function testEditorDiffSummary() {
+  const summary = buildEditorDiffSummary(repository);
+  const dataEditor = summary.componentEditors.find((item) => item.componentId === "c-data");
+  const codeEditor = summary.componentEditors.find((item) => item.componentId === "c-code");
+
+  assert.strictEqual(dataEditor.editorMode, "structured-data");
+  assert.strictEqual(dataEditor.diffMode, "rich-data-diff");
+  assert.strictEqual(codeEditor.diffMode, "code-aware-diff");
+  assert.strictEqual(summary.mergeRequestDiffs[0].changedComponents[0].diffMode, "code-aware-diff");
+  assert.ok(summary.rollbackTimeline[0].rollbackCommand.includes("scibase restore"));
+  assert.ok(summary.summaryHash.length >= 12);
+}
+
 function testFullPacket() {
   const packet = buildRepositoryIntegrityPacket(repository);
 
   assert.strictEqual(packet.repository.id, repository.id);
   assert.strictEqual(packet.mergeRequests[0].mergeable, true);
+  assert.ok(packet.editorDiff.componentEditors.length >= 7);
   assert.ok(packet.citations.apa);
   assert.ok(packet.exportBundle.bundleHash);
 }
@@ -93,6 +108,7 @@ testCommitAndTag();
 testForkRecord();
 testMergeRequestAndReproducibility();
 testCitationAndExport();
+testEditorDiffSummary();
 testFullPacket();
 
 console.log("repository-integrity-ledger tests passed");

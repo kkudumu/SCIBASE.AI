@@ -10,7 +10,8 @@ This module is a deterministic milestone for SCIBASE issue #10, Project Reposito
 | Semantic versioning and tags | `createSemanticTag()` attaches semantic tags, DOI metadata, and tag hashes to commits. |
 | Forking and attribution | `buildForkRecord()` records source repository, source DOI, authors, base commit, and fork hash. |
 | Merge requests and review | `evaluateMergeRequest()` checks source/target commits, discussions, approvals, and data-change reproducibility blockers. |
-| In-browser editors and diffs | Component metadata carries kinds/paths/schemas; merge-request changed components provide diff input for UI layers. |
+| In-browser editors and diffs | `buildEditorDiffSummary()` maps components to scientific text, Jupyter notebook, structured-data, code-aware, or hash-only editor/diff modes. |
+| Visual revision timeline and rollback | `buildEditorDiffSummary()` emits a commit rollback timeline with deterministic restore commands. |
 | Reproducibility pipelines | `evaluateReproducibility()` reports execution environment, check pass rate, status, and reproducibility hash. |
 | Repository identifiers and citation | `generateCitation()` produces APA and BibTeX-style citations from repository/tag metadata. |
 | Programmatic access and export | `buildExportBundle()` emits API routes, CLI commands, manifest, reproducibility status, and export bundle hash. |

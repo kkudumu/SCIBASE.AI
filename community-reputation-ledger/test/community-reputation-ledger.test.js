@@ -7,6 +7,7 @@ const {
   buildContributionLedger,
   buildContributorGraph,
   buildLeaderboards,
+  buildModerationSignals,
   createInlineComment,
   createPeerReview,
   scoreResearcher,
@@ -61,6 +62,28 @@ function testTransparentReputationScoring() {
   assert.ok(ada.transparencyHash);
 }
 
+function testModerationSignals() {
+  const moderation = buildModerationSignals(community);
+  const risky = buildModerationSignals({
+    ...community,
+    metrics: {
+      researchers: {
+        ...community.metrics.researchers,
+        "u-ravi": {
+          ...community.metrics.researchers["u-ravi"],
+          flags: [{ id: "flag-high", severity: "high", reason: "review ring investigation" }],
+        },
+      },
+    },
+  });
+
+  assert.strictEqual(moderation.status, "review");
+  assert.ok(moderation.signals.some((signal) => signal.type === "self-endorsement"));
+  assert.ok(moderation.signals.some((signal) => signal.type === "reciprocal-endorsement"));
+  assert.strictEqual(risky.status, "needs-action");
+  assert.ok(risky.moderationHash.length >= 12);
+}
+
 function testLeaderboardsAndPacket() {
   const leaderboards = buildLeaderboards(community, "domain");
   const biology = leaderboards.find((leaderboard) => leaderboard.group === "biology");
@@ -69,6 +92,7 @@ function testLeaderboardsAndPacket() {
   assert.strictEqual(biology.entries[0].researcherId, "u-ada");
   assert.strictEqual(packet.reviews.length, community.reviews.length);
   assert.strictEqual(packet.comments.length, community.comments.length);
+  assert.strictEqual(packet.moderation.status, "review");
   assert.ok(packet.incentiveTiers.includes("trusted-reviewer"));
   assert.ok(packet.packetHash.length >= 12);
 }
@@ -77,6 +101,7 @@ testReviewTemplatesAndPrivacy();
 testInlineComments();
 testContributionLedgerAndGraph();
 testTransparentReputationScoring();
+testModerationSignals();
 testLeaderboardsAndPacket();
 
 console.log("community-reputation-ledger tests passed");

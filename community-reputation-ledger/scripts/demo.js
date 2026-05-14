@@ -14,6 +14,7 @@ console.log(
       comments: packet.comments.length,
       creditedContributions: packet.contributionLedger.length,
       topBiologyResearcher: topDomain.entries[0],
+      moderation: packet.moderation,
       incentiveTiers: packet.incentiveTiers,
       packetHash: packet.packetHash,
     },

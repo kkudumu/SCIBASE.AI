@@ -12,6 +12,7 @@ The issue asks for structured peer reviews, inline comments, contributor credit,
 - Timestamped contributor credit records with validated CRediT roles and stable hashes.
 - Git-style contributor graph aggregation by researcher and project.
 - Transparent researcher score components for citations, forks, endorsements, peer review, reproducibility, bounties, contribution credit, and moderation penalties.
+- Moderation signals for self-endorsements, reciprocal endorsements, thin reviews, and flagged researcher metrics.
 - Leaderboards by domain, region, and institution.
 - Badge and incentive tier assignment for trusted reviewers, reproducibility, challenge completion, and open-science leadership.
 - Sample community fixture, tests, requirement map, CLI demo, and short demo GIF.
@@ -36,6 +37,9 @@ Expected demo shape:
   "topBiologyResearcher": {
     "researcherId": "u-ada",
     "tier": "open-science-champion"
+  },
+  "moderation": {
+    "status": "review"
   },
   "packetHash": "..."
 }

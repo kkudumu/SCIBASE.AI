@@ -11,6 +11,7 @@ This module implements a deterministic community and reputation milestone for SC
 | CRediT taxonomy support | Contribution roles are validated against the CRediT role list exported as `CREDIT_ROLES`. |
 | Git-style contributor graphs | `buildContributorGraph()` aggregates contributor/project edges, role counts, contribution counts, and credit totals. |
 | Transparent reputation metrics | `scoreResearcher()` exposes score components for citations, forks, endorsements, peer review, reproducibility badges, bounty completions, contribution credit, and penalties. |
+| Abuse-resistant moderation hooks | `buildModerationSignals()` flags self-endorsements, reciprocal endorsements, thin review narratives, and flagged researcher metrics before scores are trusted. |
 | Leaderboards by domain, region, and institution | `buildLeaderboards()` groups researchers by a requested dimension and ranks them deterministically. |
 | Badge and incentive tiers | `assignBadges()` and `assignTier()` surface Trusted Reviewer, Reproducibility Verified, Challenge Finisher, and Open Science Champion outcomes through `scoreResearcher()`. |
 | Reviewer demo | `npm run demo` prints review counts, contribution counts, top-ranked researcher, incentive tiers, and packet hash. |

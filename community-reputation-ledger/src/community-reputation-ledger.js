@@ -309,6 +309,66 @@ function buildLeaderboards(communityInput, dimension = "domain") {
   }));
 }
 
+function buildModerationSignals(communityInput) {
+  const community = normalizeCommunity(communityInput);
+  const signals = [];
+  const activeEndorsements = community.endorsements.filter((endorsement) => endorsement.status !== "revoked");
+  const activePairs = new Set(activeEndorsements.map((endorsement) => `${endorsement.from}->${endorsement.to}`));
+
+  for (const endorsement of activeEndorsements) {
+    if (endorsement.from === endorsement.to) {
+      signals.push({
+        type: "self-endorsement",
+        severity: "medium",
+        researcherId: endorsement.to,
+        message: "Self-endorsements are ignored by reputation scoring.",
+      });
+    } else if (activePairs.has(`${endorsement.to}->${endorsement.from}`)) {
+      signals.push({
+        type: "reciprocal-endorsement",
+        severity: "low",
+        researcherId: endorsement.to,
+        relatedResearcherId: endorsement.from,
+        message: "Reciprocal endorsements should be reviewed for collusion risk.",
+      });
+    }
+  }
+
+  for (const review of community.reviews.map(createPeerReview)) {
+    const narrativeLength = [
+      review.narrative.summary,
+      ...review.narrative.strengths,
+      ...review.narrative.concerns,
+    ].join(" ").trim().length;
+    if (narrativeLength < 40) {
+      signals.push({
+        type: "thin-review",
+        severity: "low",
+        reviewId: review.id,
+        message: "Structured score exists but the narrative is short.",
+      });
+    }
+  }
+
+  for (const [researcherId, metric] of Object.entries(community.metrics.researchers || {})) {
+    for (const flag of asArray(metric.flags)) {
+      signals.push({
+        type: "metric-flag",
+        severity: flag.severity === "high" ? "high" : "medium",
+        researcherId,
+        flagId: flag.id || null,
+        message: flag.reason || "Researcher metric flag requires review.",
+      });
+    }
+  }
+
+  return {
+    status: signals.some((signal) => signal.severity === "high") ? "needs-action" : signals.length ? "review" : "clear",
+    signals,
+    moderationHash: hashRecord(signals),
+  };
+}
+
 function buildCommunityReputationPacket(communityInput) {
   const community = normalizeCommunity(communityInput);
   const reviews = community.reviews.map(createPeerReview);
@@ -316,6 +376,7 @@ function buildCommunityReputationPacket(communityInput) {
   const contributionLedger = buildContributionLedger(community);
   const contributorGraph = buildContributorGraph(community);
   const reputationScores = community.researchers.map((researcher) => scoreResearcher(community, researcher.id));
+  const moderation = buildModerationSignals(community);
 
   return {
     reviewTemplates: Object.keys(REVIEW_TEMPLATES).map(selectReviewTemplate),
@@ -329,8 +390,9 @@ function buildCommunityReputationPacket(communityInput) {
       region: buildLeaderboards(community, "region"),
       institution: buildLeaderboards(community, "institution"),
     },
+    moderation,
     incentiveTiers: ["emerging-contributor", "active-collaborator", "trusted-reviewer", "open-science-champion"],
-    packetHash: hashRecord({ reviews, comments, contributionLedger, reputationScores }),
+    packetHash: hashRecord({ reviews, comments, contributionLedger, reputationScores, moderation }),
   };
 }
 
@@ -342,6 +404,7 @@ module.exports = {
   buildContributionLedger,
   buildContributorGraph,
   buildLeaderboards,
+  buildModerationSignals,
   createInlineComment,
   createPeerReview,
   hashRecord,

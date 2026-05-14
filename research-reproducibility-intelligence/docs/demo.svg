@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Research Reproducibility Intelligence Demo</title>
+  <desc id="desc">Visual demo for the peer review, reproducibility, and research gap assistant packet.</desc>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+    .bg { fill: #f6f8fb; }
+    .panel { fill: #fff; stroke: #d9dee8; stroke-width: 2; rx: 8; }
+    .headline { font-size: 34px; font-weight: 700; }
+    .small { font-size: 18px; }
+    .label { font-size: 15px; fill: #596579; }
+    .score { font-size: 40px; font-weight: 700; fill: #0f766e; }
+    .warn { fill: #b45309; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+  </style>
+  <rect class="bg" width="960" height="540"/>
+  <text x="48" y="64" class="headline">AI Research Assistant Suite</text>
+  <text x="48" y="96" class="small">Peer review · reproducibility · research gap discovery</text>
+  <rect x="48" y="132" width="260" height="150" class="panel"/>
+  <text x="72" y="166" class="label">Peer review score</text>
+  <text x="72" y="218" class="score">62</text>
+  <text x="72" y="252" class="small warn">claim evidence needed</text>
+  <rect x="350" y="132" width="260" height="150" class="panel"/>
+  <text x="374" y="166" class="label">Reproducibility</text>
+  <text x="374" y="218" class="score">1.00</text>
+  <text x="374" y="252" class="small">runbook generated</text>
+  <rect x="652" y="132" width="260" height="150" class="panel"/>
+  <text x="676" y="166" class="label">Top gap</text>
+  <text x="676" y="208" class="small">Microbial exposure</text>
+  <text x="676" y="238" class="small">after hurricane flooding</text>
+  <rect x="48" y="318" width="864" height="142" class="panel"/>
+  <text x="72" y="354" class="label">Assistant packet</text>
+  <text x="72" y="388" class="mono">{ readinessScore, peerReview, reproducibility, researchGaps, nextActions }</text>
+  <text x="72" y="424" class="mono">Top action: link unsupported respiratory outcome claim to evidence.</text>
+</svg>

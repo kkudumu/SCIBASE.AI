@@ -1,0 +1,12 @@
+{
+  "name": "scibase-research-reproducibility-intelligence",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deterministic AI-powered research assistant suite milestone for SCIBASE issue #16.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/research-assistant.js && node --check scripts/demo.js && node --check test/research-assistant.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/research-assistant.test.js"
+  }
+}

@@ -13,6 +13,7 @@ This module is a deterministic milestone for SCIBASE issue #11, User & Project M
 | Role-based access | Role ranks cover Owner, Admin, Contributor, Reviewer, and Viewer. |
 | Object-level control | Project policies and `objectRules` can allow or deny actions such as dataset read/download independently of role defaults. |
 | External collaborator invitations | `createInvitation()` creates time-limited invitation records with role and read-only state, while `buildProjectLifecycleReport()` reviews active/expired invitation status. |
+| Invitation acceptance and onboarding | `buildCollaboratorOnboardingPlan()` reports required identity providers, MFA gates, invite-acceptance route contracts, blocker reasons, and audit events before a collaborator can join a project. |
 | Audit log | `appendAuditEvent()` appends hashed audit events. |
 | Reputation metrics | Dashboard profiles include downloads, forks, endorsements, peer reviews, collaborations, and reproducibility score. |
 | Reviewer demo | `npm run demo` prints identity summary, access decisions, and dashboard hash for `data/sample-workspace.json`. |

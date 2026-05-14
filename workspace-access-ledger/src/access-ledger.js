@@ -308,11 +308,71 @@ function buildProjectLifecycleReport(workspaceInput) {
   };
 }
 
+function buildCollaboratorOnboardingPlan(workspaceInput) {
+  const workspace = normalizeWorkspace(workspaceInput);
+  const asOf = workspace.asOf || new Date().toISOString();
+  const plans = workspace.invitations.map((invitation) => {
+    const project = workspace.projects.find((candidate) => candidate.id === invitation.projectId) || {};
+    const invitedUser = workspace.users.find((user) => user.email === invitation.email) || null;
+    const role = invitation.role || "viewer";
+    const roleRank = ROLE_RANK[role] || ROLE_RANK.viewer;
+    const expired = invitation.expiresAt ? isBefore(invitation.expiresAt, asOf) : false;
+    const requiredProviders = ["email"];
+    if (roleRank >= ROLE_RANK.reviewer || project.requireOrcid) requiredProviders.push("orcid");
+    if (project.visibility === "institutional-only" || project.requireInstitutionalSaml) {
+      requiredProviders.push("saml");
+    }
+
+    const identity = invitedUser ? buildUnifiedIdentity(invitedUser) : null;
+    const missingProviders = identity
+      ? requiredProviders.filter((provider) => !identity.providers.includes(provider))
+      : requiredProviders;
+    const mfaRequired = roleRank >= ROLE_RANK.contributor || Boolean(project.requireMfa);
+    const blockers = [];
+    if (invitation.status === "expired" || (expired && invitation.status === "pending")) {
+      blockers.push("invitation-expired");
+    }
+    if (missingProviders.length) blockers.push("missing-identity-provider");
+    if (mfaRequired && (!identity || !identity.mfaEnabled)) blockers.push("mfa-required");
+    if (invitation.status === "revoked") blockers.push("invitation-revoked");
+
+    return {
+      invitationId: invitation.id,
+      projectId: invitation.projectId,
+      email: invitation.email,
+      role,
+      readOnly: Boolean(invitation.readOnly),
+      status: blockers.length ? "blocked" : "ready-to-accept",
+      requiredProviders,
+      missingProviders,
+      mfaRequired,
+      acceptanceRoute: `/api/workspaces/${workspace.id}/projects/${invitation.projectId}/invitations/${invitation.id}/accept`,
+      auditEvents: [
+        "identity.linked",
+        ...(mfaRequired ? ["mfa.enabled"] : []),
+        "invitation.accepted",
+        "project.member.added",
+      ],
+      blockers,
+      onboardingHash: hashRecord({ invitation, requiredProviders, blockers, asOf }),
+    };
+  });
+
+  return {
+    asOf,
+    plans,
+    readyCount: plans.filter((plan) => plan.status === "ready-to-accept").length,
+    blockedCount: plans.filter((plan) => plan.status === "blocked").length,
+    onboardingHash: hashRecord({ plans, asOf }),
+  };
+}
+
 function buildAccessDashboard(workspaceInput, activityByUser) {
   const workspace = normalizeWorkspace(workspaceInput);
   const identities = workspace.users.map(buildUnifiedIdentity);
   const profiles = workspace.users.map((user) => buildResearcherProfile(user, (activityByUser || {})[user.id] || {}));
   const lifecycle = buildProjectLifecycleReport(workspace);
+  const onboarding = buildCollaboratorOnboardingPlan(workspace);
   const mfaCoverage = identities.length
     ? Number((identities.filter((identity) => identity.mfaEnabled).length / identities.length).toFixed(4))
     : 0;
@@ -336,10 +396,11 @@ function buildAccessDashboard(workspaceInput, activityByUser) {
     profiles,
     projectSummary,
     lifecycle,
+    onboarding,
     identitySecurity: buildIdentitySecurityReview(workspace),
     pendingInvitations: workspace.invitations.filter((invitation) => invitation.status === "pending"),
     auditEvents: workspace.auditLog.length,
-    dashboardHash: hashRecord({ identities, profiles, projectSummary, lifecycle, auditLog: workspace.auditLog }),
+    dashboardHash: hashRecord({ identities, profiles, projectSummary, lifecycle, onboarding, auditLog: workspace.auditLog }),
   };
 }
 
@@ -362,6 +423,7 @@ module.exports = {
   ROLE_RANK,
   appendAuditEvent,
   buildAccessDashboard,
+  buildCollaboratorOnboardingPlan,
   buildIdentitySecurityReview,
   buildProjectLifecycleReport,
   buildResearcherProfile,

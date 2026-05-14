@@ -25,6 +25,18 @@ console.log(
           risk: invitation.risk,
         })),
       },
+      onboarding: {
+        readyCount: packet.dashboard.onboarding.readyCount,
+        blockedCount: packet.dashboard.onboarding.blockedCount,
+        plans: packet.dashboard.onboarding.plans.map((plan) => ({
+          invitationId: plan.invitationId,
+          status: plan.status,
+          requiredProviders: plan.requiredProviders,
+          mfaRequired: plan.mfaRequired,
+          blockers: plan.blockers,
+          acceptanceRoute: plan.acceptanceRoute,
+        })),
+      },
       allowedCount: packet.allowedCount,
       deniedCount: packet.deniedCount,
       decisions: packet.decisions,

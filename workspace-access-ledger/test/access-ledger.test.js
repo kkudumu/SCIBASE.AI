@@ -5,6 +5,7 @@ const sample = require("../data/sample-workspace.json");
 const {
   appendAuditEvent,
   buildAccessDashboard,
+  buildCollaboratorOnboardingPlan,
   buildIdentitySecurityReview,
   buildProjectLifecycleReport,
   buildResearcherProfile,
@@ -137,6 +138,22 @@ function testProjectLifecycleReport() {
   assert.ok(lifecycle.lifecycleHash.length >= 12);
 }
 
+function testCollaboratorOnboardingPlan() {
+  const onboarding = buildCollaboratorOnboardingPlan(sample.workspace);
+  const pendingContributor = onboarding.plans.find((plan) => plan.invitationId === "invite-1");
+  const expiredViewer = onboarding.plans.find((plan) => plan.invitationId === "invite-2");
+
+  assert.strictEqual(onboarding.readyCount, 0);
+  assert.strictEqual(onboarding.blockedCount, 2);
+  assert.deepStrictEqual(pendingContributor.requiredProviders, ["email", "orcid"]);
+  assert.strictEqual(pendingContributor.mfaRequired, true);
+  assert.ok(pendingContributor.blockers.includes("missing-identity-provider"));
+  assert.ok(pendingContributor.blockers.includes("mfa-required"));
+  assert.ok(pendingContributor.acceptanceRoute.includes("/invitations/invite-1/accept"));
+  assert.ok(expiredViewer.blockers.includes("invitation-expired"));
+  assert.ok(onboarding.onboardingHash.length >= 12);
+}
+
 function testDashboard() {
   const dashboard = buildAccessDashboard(sample.workspace, sample.activityByUser);
 
@@ -145,6 +162,7 @@ function testDashboard() {
   assert.strictEqual(dashboard.identitySecurity.status, "ready");
   assert.strictEqual(dashboard.pendingInvitations.length, 1);
   assert.strictEqual(dashboard.lifecycle.activeProjects, 1);
+  assert.strictEqual(dashboard.onboarding.blockedCount, 2);
   assert.ok(dashboard.dashboardHash.length >= 12);
 }
 
@@ -166,6 +184,7 @@ testAccessDecisions();
 testInvitationAndAudit();
 testIdentitySecurityReview();
 testProjectLifecycleReport();
+testCollaboratorOnboardingPlan();
 testDashboard();
 testFullPacket();
 

@@ -52,6 +52,8 @@
         "title": "Coastal flooding microbiome study",
         "visibility": "private",
         "institutionId": "northstar",
+        "requireOrcid": true,
+        "requireMfa": true,
         "members": [
           { "userId": "u-owner", "role": "owner" },
           { "userId": "u-reviewer", "role": "reviewer" }

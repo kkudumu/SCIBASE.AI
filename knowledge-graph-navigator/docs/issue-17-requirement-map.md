@@ -12,8 +12,9 @@ This module implements a deterministic scientific knowledge graph milestone for 
 | Exploratory research journeys | `buildResearchJourney()` walks graph hops such as concept to project to dataset/tool/author with evidence trails. |
 | Dynamic node types | `ENTITY_TYPES` covers projects, authors, affiliations, concepts, tools, datasets, protocols, references, and funders. |
 | Relationship graph for authors, datasets, protocols, tools, funders, and references | `buildKnowledgeGraph()` emits normalized nodes and edges for authorship, affiliation, datasets, protocols, tools, citations, funding, and related projects. |
+| Author graphs and lab-to-lab collaboration maps | `buildCollaborationMap()` derives author-author and affiliation-affiliation collaboration edges from co-authored project relationships. |
 | AI research recommendations | `recommendResearch()` ranks project suggestions from user interests, concept matches, citation signals, reproducibility status, and evidence edges. |
-| Sidebar/digest/API readiness | `buildKnowledgeGraphPacket()` emits recommendation digests, navigation examples, JSON-LD export data, and API route contracts. |
+| Sidebar/digest/discovery-mode/API readiness | `buildRecommendationSurfaces()` emits sidebar cards, weekly digest payloads, and discovery-mode query seeds. `buildKnowledgeGraphPacket()` includes those surfaces, navigation examples, JSON-LD export data, collaboration maps, and API route contracts. |
 | Reviewer demo | `npm run demo` prints node/edge counts, verified projects, recommendation output, and graph hashes. |
 
 ## Verification

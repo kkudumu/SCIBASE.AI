@@ -319,6 +319,102 @@ function buildResearchJourney(graphInput, startEntityId, maxHops = 3) {
   };
 }
 
+function buildCollaborationMap(graphInput) {
+  const graph = graphInput.nodes ? graphInput : buildKnowledgeGraph(graphInput);
+  const authoredByProject = new Map();
+  const affiliationByAuthor = new Map();
+
+  for (const edge of graph.edges) {
+    if (edge.relation === "authored-by") {
+      if (!authoredByProject.has(edge.source)) authoredByProject.set(edge.source, []);
+      authoredByProject.get(edge.source).push(edge.target);
+    }
+    if (edge.relation === "affiliated-with") {
+      affiliationByAuthor.set(edge.source, edge.target);
+    }
+  }
+
+  const authorEdges = new Map();
+  const labEdges = new Map();
+  for (const [projectId, authorIds] of authoredByProject.entries()) {
+    const sortedAuthors = [...new Set(authorIds)].sort();
+    for (let index = 0; index < sortedAuthors.length; index += 1) {
+      for (let other = index + 1; other < sortedAuthors.length; other += 1) {
+        const left = sortedAuthors[index];
+        const right = sortedAuthors[other];
+        const edgeId = `${left}<->${right}`;
+        const existing = authorEdges.get(edgeId) || {
+          source: left,
+          target: right,
+          sharedProjects: [],
+          weight: 0,
+        };
+        existing.sharedProjects.push(projectId);
+        existing.weight = existing.sharedProjects.length;
+        authorEdges.set(edgeId, existing);
+
+        const leftLab = affiliationByAuthor.get(left);
+        const rightLab = affiliationByAuthor.get(right);
+        if (leftLab && rightLab && leftLab !== rightLab) {
+          const labId = [leftLab, rightLab].sort().join("<->");
+          const labEdge = labEdges.get(labId) || {
+            source: [leftLab, rightLab].sort()[0],
+            target: [leftLab, rightLab].sort()[1],
+            sharedProjects: [],
+            authorPairs: [],
+            weight: 0,
+          };
+          labEdge.sharedProjects.push(projectId);
+          labEdge.authorPairs.push([left, right]);
+          labEdge.weight = labEdge.sharedProjects.length;
+          labEdges.set(labId, labEdge);
+        }
+      }
+    }
+  }
+
+  return {
+    authors: graph.nodes.filter((node) => node.type === "author"),
+    affiliations: graph.nodes.filter((node) => node.type === "affiliation"),
+    authorEdges: Array.from(authorEdges.values()),
+    labEdges: Array.from(labEdges.values()),
+    collaborationHash: hashRecord({
+      authorEdges: Array.from(authorEdges.values()),
+      labEdges: Array.from(labEdges.values()),
+    }),
+  };
+}
+
+function buildRecommendationSurfaces(corpusInput, userId) {
+  const recommendations = recommendResearch(corpusInput, userId, 5);
+  return {
+    userId,
+    sidebar: recommendations.slice(0, 3).map((recommendation) => ({
+      projectId: recommendation.projectId,
+      title: recommendation.title,
+      score: recommendation.score,
+      primaryReason: recommendation.reasons[0] || "Related research activity",
+    })),
+    weeklyDigest: {
+      subject: "Your SCIBASE knowledge graph recommendations",
+      items: recommendations.map((recommendation) => ({
+        title: recommendation.title,
+        score: recommendation.score,
+        reasons: recommendation.reasons,
+      })),
+    },
+    discoveryMode: recommendations.map((recommendation) => ({
+      seedProjectId: recommendation.projectId,
+      nextQuery: {
+        type: "project",
+        text: recommendation.title.split(/\s+/).slice(0, 3).join(" "),
+      },
+      evidenceEdges: recommendation.evidenceEdges.slice(0, 4),
+    })),
+    surfacesHash: hashRecord({ userId, recommendations }),
+  };
+}
+
 function schemaTypeForEntity(type) {
   return {
     project: "ScholarlyArticle",
@@ -385,20 +481,26 @@ function buildGraphLinkedDataExport(graphInput) {
 
 function buildKnowledgeGraphPacket(corpusInput) {
   const graph = buildKnowledgeGraph(corpusInput);
+  const corpus = normalizeCorpus(corpusInput);
   const linkedDataExport = buildGraphLinkedDataExport(graph);
+  const collaborationMap = buildCollaborationMap(graph);
   const entityPages = graph.nodes
     .filter((node) => ["concept", "dataset", "tool", "author"].includes(node.type))
     .slice(0, 8)
     .map((node) => buildEntityPage(graph, node.id));
-  const recommendationDigest = normalizeCorpus(corpusInput).userProfiles.map((profile) => ({
+  const recommendationDigest = corpus.userProfiles.map((profile) => ({
     userId: profile.id,
     recommendations: recommendResearch(corpusInput, profile.id, 3),
   }));
+  const recommendationSurfaces = corpus.userProfiles.map((profile) =>
+    buildRecommendationSurfaces(corpusInput, profile.id),
+  );
 
   return {
     supportedEntityTypes: ENTITY_TYPES,
     supportedRelationTypes: RELATION_TYPES,
     graph,
+    collaborationMap,
     entityPages,
     navigationExamples: [
       queryGraph(graph, { type: "dataset" }),
@@ -411,14 +513,23 @@ function buildKnowledgeGraphPacket(corpusInput) {
     ],
     linkedDataExport,
     recommendationDigest,
+    recommendationSurfaces,
     apiRoutes: [
       "GET /knowledge-graph/entities",
       "GET /knowledge-graph/entities/:id",
       "GET /knowledge-graph/search?type=dataset&reproducibility=verified",
       "GET /knowledge-graph/recommendations/:userId",
+      "GET /knowledge-graph/recommendations/:userId/surfaces",
+      "GET /knowledge-graph/collaborations",
       "GET /knowledge-graph/export/jsonld",
     ],
-    packetHash: hashRecord({ graphHash: graph.graphHash, recommendationDigest, linkedDataExport: linkedDataExport.exportHash }),
+    packetHash: hashRecord({
+      graphHash: graph.graphHash,
+      collaborationHash: collaborationMap.collaborationHash,
+      recommendationDigest,
+      recommendationSurfaces,
+      linkedDataExport: linkedDataExport.exportHash,
+    }),
   };
 }
 
@@ -429,6 +540,8 @@ module.exports = {
   buildGraphLinkedDataExport,
   buildKnowledgeGraph,
   buildKnowledgeGraphPacket,
+  buildCollaborationMap,
+  buildRecommendationSurfaces,
   buildResearchJourney,
   extractDois,
   extractEntitiesFromProject,

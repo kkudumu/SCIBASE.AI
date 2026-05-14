@@ -15,6 +15,8 @@ The issue asks for entity extraction, linked graph data, graph navigation, entit
 - Graph navigation filters by node type, domain, citation count, reproducibility status, and text.
 - Traceable research journeys that walk concept/dataset nodes through projects, datasets, tools, authors, and collaborators.
 - Recommendation digest ranked from user interests, concept matches, citation signals, verified reproducibility, and supporting evidence edges.
+- Author and lab collaboration maps derived from co-authored projects and affiliation edges.
+- Recommendation surfaces for project sidebars, weekly digest email payloads, and discovery-mode query seeds.
 - API route contracts for graph entities, entity details, semantic search, and recommendations.
 - Sample corpus fixture, tests, requirement map, CLI demo, and short demo GIF.
 
@@ -33,6 +35,10 @@ Expected demo shape:
 {
   "nodes": 30,
   "edges": 30,
+  "collaborationMap": {
+    "authorEdges": 1,
+    "labEdges": 1
+  },
   "entityPages": 8,
   "verifiedProjects": [
     "Coastal flooding microbiome atlas",
@@ -54,6 +60,11 @@ Expected demo shape:
       "score": 40.5
     }
   ],
+  "recommendationSurfacesForMaya": {
+    "sidebar": [],
+    "weeklyDigest": {},
+    "discoveryMode": []
+  },
   "packetHash": "..."
 }
 ```
@@ -64,7 +75,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/knowledge-graph-navigator.js` - extraction, graph construction, entity pages, graph queries, JSON-LD export, recommendations.
+- `src/knowledge-graph-navigator.js` - extraction, graph construction, entity pages, collaboration maps, graph queries, JSON-LD export, recommendations, and recommendation surfaces.
 - `data/sample-corpus.json` - reviewable scientific corpus fixture.
 - `test/knowledge-graph-navigator.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

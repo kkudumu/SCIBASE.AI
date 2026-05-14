@@ -10,6 +10,11 @@ console.log(
     {
       nodes: packet.graph.nodes.length,
       edges: packet.graph.edges.length,
+      collaborationMap: {
+        authorEdges: packet.collaborationMap.authorEdges.length,
+        labEdges: packet.collaborationMap.labEdges.length,
+        collaborationHash: packet.collaborationMap.collaborationHash,
+      },
       entityPages: packet.entityPages.length,
       verifiedProjects: packet.navigationExamples[1].nodes.map((node) => node.label),
       researchJourneys: packet.researchJourneys,
@@ -19,6 +24,7 @@ console.log(
         exportHash: packet.linkedDataExport.exportHash,
       },
       recommendationsForMaya: packet.recommendationDigest.find((digest) => digest.userId === "u-maya").recommendations,
+      recommendationSurfacesForMaya: packet.recommendationSurfaces.find((surface) => surface.userId === "u-maya"),
       graphHash: packet.graph.graphHash,
       packetHash: packet.packetHash,
     },

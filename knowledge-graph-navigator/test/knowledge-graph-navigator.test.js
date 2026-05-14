@@ -3,10 +3,12 @@
 const assert = require("assert");
 const corpus = require("../data/sample-corpus.json");
 const {
+  buildCollaborationMap,
   buildEntityPage,
   buildGraphLinkedDataExport,
   buildKnowledgeGraph,
   buildKnowledgeGraphPacket,
+  buildRecommendationSurfaces,
   buildResearchJourney,
   extractDois,
   extractEntitiesFromProject,
@@ -63,6 +65,27 @@ function testResearchJourneys() {
   assert.ok(journey.journeyHash.length >= 12);
 }
 
+function testCollaborationMap() {
+  const graph = buildKnowledgeGraph(corpus);
+  const collaborationMap = buildCollaborationMap(graph);
+
+  assert.ok(collaborationMap.authors.some((author) => author.label === "Ada Chen"));
+  assert.ok(collaborationMap.affiliations.some((affiliation) => affiliation.label === "Northstar Lab"));
+  assert.ok(collaborationMap.authorEdges.some((edge) => edge.sharedProjects.includes("project:flood-microbiome")));
+  assert.ok(collaborationMap.labEdges.some((edge) => edge.sharedProjects.includes("project:flood-microbiome")));
+  assert.ok(collaborationMap.collaborationHash.length >= 12);
+}
+
+function testRecommendationSurfaces() {
+  const surfaces = buildRecommendationSurfaces(corpus, "u-maya");
+
+  assert.strictEqual(surfaces.userId, "u-maya");
+  assert.ok(surfaces.sidebar.length > 0);
+  assert.ok(surfaces.weeklyDigest.subject.includes("knowledge graph"));
+  assert.ok(surfaces.discoveryMode[0].evidenceEdges.length > 0);
+  assert.ok(surfaces.surfacesHash.length >= 12);
+}
+
 function testLinkedDataExport() {
   const graph = buildKnowledgeGraph(corpus);
   const linkedData = buildGraphLinkedDataExport(graph);
@@ -83,9 +106,12 @@ function testPacket() {
   assert.ok(packet.supportedRelationTypes.includes("mentions-concept"));
   assert.strictEqual(packet.navigationExamples.length, 3);
   assert.strictEqual(packet.researchJourneys.length, 2);
+  assert.ok(packet.collaborationMap.authorEdges.length > 0);
   assert.strictEqual(packet.linkedDataExport.entityCount, packet.graph.nodes.length);
   assert.ok(packet.apiRoutes.includes("GET /knowledge-graph/export/jsonld"));
+  assert.ok(packet.apiRoutes.includes("GET /knowledge-graph/collaborations"));
   assert.strictEqual(packet.recommendationDigest.length, corpus.userProfiles.length);
+  assert.strictEqual(packet.recommendationSurfaces.length, corpus.userProfiles.length);
   assert.ok(packet.packetHash.length >= 12);
 }
 
@@ -94,6 +120,8 @@ testGraphConstruction();
 testEntityPagesAndNavigation();
 testRecommendations();
 testResearchJourneys();
+testCollaborationMap();
+testRecommendationSurfaces();
 testLinkedDataExport();
 testPacket();
 

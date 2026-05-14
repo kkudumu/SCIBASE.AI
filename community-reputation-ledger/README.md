@@ -11,6 +11,9 @@ The issue asks for structured peer reviews, inline comments, contributor credit,
 - Inline comments targeting documents, datasets, code, notebooks, anchors, and line ranges.
 - Timestamped contributor credit records with validated CRediT roles and stable hashes.
 - Git-style contributor graph aggregation by researcher and project.
+- Researcher profile views with review history, comment history, visible citation credits, badges, tiers, and profile hashes.
+- Project timeline views that combine contributions, reviews, and comments into hashable chronological events.
+- Citation page views that surface visible contributor credit by project for author/citation pages.
 - Transparent researcher score components for citations, forks, endorsements, peer review, reproducibility, bounties, contribution credit, and moderation penalties.
 - Moderation signals for self-endorsements, reciprocal endorsements, thin reviews, and flagged researcher metrics.
 - Governance audit for review quality, reputation score changes, open appeals, required actions, and appeal SLA due dates.
@@ -35,6 +38,19 @@ Expected demo shape:
   "reviews": 2,
   "comments": 2,
   "creditedContributions": 5,
+  "researcherProfiles": 3,
+  "projectTimelines": [
+    {
+      "projectId": "project-flood-microbiome",
+      "eventCount": 5
+    }
+  ],
+  "citationPages": [
+    {
+      "projectId": "project-flood-microbiome",
+      "creditCount": 3
+    }
+  ],
   "topBiologyResearcher": {
     "researcherId": "u-ada",
     "tier": "open-science-champion"
@@ -58,7 +74,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/community-reputation-ledger.js` - peer reviews, comments, contribution ledger, contributor graph, reputation scores, leaderboards, moderation, and governance audit.
+- `src/community-reputation-ledger.js` - peer reviews, comments, contribution ledger, contributor graph, researcher profiles, project timelines, citation pages, reputation scores, leaderboards, moderation, and governance audit.
 - `data/sample-community.json` - reviewable community fixture.
 - `test/community-reputation-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

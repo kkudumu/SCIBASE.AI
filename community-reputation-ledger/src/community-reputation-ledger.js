@@ -310,6 +310,149 @@ function buildLeaderboards(communityInput, dimension = "domain") {
   }));
 }
 
+function buildResearcherProfiles(communityInput) {
+  const community = normalizeCommunity(communityInput);
+  const contributionLedger = buildContributionLedger(community);
+  const comments = community.comments.map(createInlineComment);
+  const reviews = community.reviews.map(createPeerReview);
+
+  return community.researchers.map((researcher) => {
+    const score = scoreResearcher(community, researcher.id);
+    const profileContributions = contributionLedger.filter((entry) => entry.contributorId === researcher.id);
+    const profileReviews = reviews.filter(
+      (review) =>
+        review.reviewerId === researcher.id ||
+        review.reviewerAlias.endsWith(hashRecord({ reviewerId: researcher.id }).slice(0, 8)),
+    );
+    const profileComments = comments.filter(
+      (comment) =>
+        comment.authorId === researcher.id ||
+        comment.authorAlias.endsWith(hashRecord({ authorId: researcher.id }).slice(0, 8)),
+    );
+
+    return {
+      researcherId: researcher.id,
+      displayName: researcher.displayName || researcher.id,
+      domain: researcher.domain || "general",
+      institution: researcher.institution || "independent",
+      tier: score.tier,
+      badges: score.badges,
+      reviewHistory: profileReviews.map((review) => ({
+        reviewId: review.id,
+        projectId: review.projectId,
+        visibility: review.visibility,
+        recommendation: review.recommendation,
+        scoreAverage: review.scoreAverage,
+        createdAt: review.createdAt,
+      })),
+      commentHistory: profileComments.map((comment) => ({
+        commentId: comment.id,
+        projectId: comment.projectId,
+        target: comment.target,
+        mode: comment.mode,
+        status: comment.status,
+        createdAt: comment.createdAt,
+      })),
+      creditSummary: {
+        totalCredit: Number(profileContributions.reduce((sum, entry) => sum + entry.credit, 0).toFixed(4)),
+        visibleCitationCredits: profileContributions
+          .filter((entry) => entry.citationVisible)
+          .map((entry) => ({
+            contributionId: entry.id,
+            projectId: entry.projectId,
+            roles: entry.roles,
+            type: entry.type,
+            credit: entry.credit,
+            timestamp: entry.timestamp,
+          })),
+      },
+      profileHash: hashRecord({ researcherId: researcher.id, score, profileContributions, profileReviews, profileComments }),
+    };
+  });
+}
+
+function buildProjectTimelines(communityInput) {
+  const community = normalizeCommunity(communityInput);
+  const contributionLedger = buildContributionLedger(community);
+  const reviews = community.reviews.map(createPeerReview);
+  const comments = community.comments.map(createInlineComment);
+
+  return community.projects.map((project) => {
+    const events = [
+      ...contributionLedger
+        .filter((entry) => entry.projectId === project.id)
+        .map((entry) => ({
+          type: "contribution",
+          id: entry.id,
+          actorId: entry.contributorId,
+          timestamp: entry.timestamp,
+          summary: `${entry.type} contribution credited`,
+          hash: entry.contributionHash,
+        })),
+      ...reviews
+        .filter((review) => review.projectId === project.id)
+        .map((review) => ({
+          type: "review",
+          id: review.id,
+          actorId: review.reviewerId || review.reviewerAlias,
+          timestamp: review.createdAt,
+          summary: `${review.visibility} review ${review.recommendation}`,
+          hash: review.reviewHash,
+        })),
+      ...comments
+        .filter((comment) => comment.projectId === project.id)
+        .map((comment) => ({
+          type: "comment",
+          id: comment.id,
+          actorId: comment.authorId || comment.authorAlias,
+          timestamp: comment.createdAt,
+          summary: `${comment.mode} comment on ${comment.target.kind}`,
+          hash: comment.commentHash,
+        })),
+    ].sort((left, right) => String(left.timestamp).localeCompare(String(right.timestamp)));
+
+    return {
+      projectId: project.id,
+      title: project.title || project.id,
+      visibility: project.visibility || "private",
+      eventCount: events.length,
+      events,
+      timelineHash: hashRecord({ projectId: project.id, events }),
+    };
+  });
+}
+
+function buildCitationPages(communityInput) {
+  const community = normalizeCommunity(communityInput);
+  const profiles = buildResearcherProfiles(community);
+  const profileById = new Map(profiles.map((profile) => [profile.researcherId, profile]));
+
+  return community.projects.map((project) => {
+    const credits = profiles.flatMap((profile) =>
+      profile.creditSummary.visibleCitationCredits
+        .filter((credit) => credit.projectId === project.id)
+        .map((credit) => ({
+          researcherId: profile.researcherId,
+          displayName: profile.displayName,
+          roles: credit.roles,
+          type: credit.type,
+          credit: credit.credit,
+          tier: profileById.get(profile.researcherId).tier,
+        })),
+    );
+
+    return {
+      projectId: project.id,
+      title: project.title || project.id,
+      credits: credits.sort((left, right) => right.credit - left.credit || left.displayName.localeCompare(right.displayName)),
+      citationText: credits
+        .map((credit) => `${credit.displayName} (${credit.roles.join(", ") || credit.type})`)
+        .join("; "),
+      citationHash: hashRecord({ projectId: project.id, credits }),
+    };
+  });
+}
+
 function buildModerationSignals(communityInput) {
   const community = normalizeCommunity(communityInput);
   const signals = [];
@@ -532,6 +675,9 @@ function buildCommunityReputationPacket(communityInput) {
   const contributionLedger = buildContributionLedger(community);
   const contributorGraph = buildContributorGraph(community);
   const reputationScores = community.researchers.map((researcher) => scoreResearcher(community, researcher.id));
+  const researcherProfiles = buildResearcherProfiles(community);
+  const projectTimelines = buildProjectTimelines(community);
+  const citationPages = buildCitationPages(community);
   const moderation = buildModerationSignals(community);
   const governance = buildGovernanceReport(community);
 
@@ -541,6 +687,9 @@ function buildCommunityReputationPacket(communityInput) {
     comments,
     contributionLedger,
     contributorGraph,
+    researcherProfiles,
+    projectTimelines,
+    citationPages,
     reputationScores,
     leaderboards: {
       domain: buildLeaderboards(community, "domain"),
@@ -550,7 +699,17 @@ function buildCommunityReputationPacket(communityInput) {
     moderation,
     governance,
     incentiveTiers: ["emerging-contributor", "active-collaborator", "trusted-reviewer", "open-science-champion"],
-    packetHash: hashRecord({ reviews, comments, contributionLedger, reputationScores, moderation, governance }),
+    packetHash: hashRecord({
+      reviews,
+      comments,
+      contributionLedger,
+      researcherProfiles,
+      projectTimelines,
+      citationPages,
+      reputationScores,
+      moderation,
+      governance,
+    }),
   };
 }
 
@@ -561,10 +720,13 @@ module.exports = {
   buildCommunityReputationPacket,
   buildContributionLedger,
   buildContributorGraph,
+  buildCitationPages,
   buildGovernanceReport,
   buildLeaderboards,
   buildModerationSignals,
+  buildProjectTimelines,
   buildReputationChangeLedger,
+  buildResearcherProfiles,
   buildReviewQualityAudits,
   createInlineComment,
   createPeerReview,

@@ -13,6 +13,15 @@ console.log(
       reviews: packet.reviews.length,
       comments: packet.comments.length,
       creditedContributions: packet.contributionLedger.length,
+      researcherProfiles: packet.researcherProfiles.length,
+      projectTimelines: packet.projectTimelines.map((timeline) => ({
+        projectId: timeline.projectId,
+        eventCount: timeline.eventCount,
+      })),
+      citationPages: packet.citationPages.map((page) => ({
+        projectId: page.projectId,
+        creditCount: page.credits.length,
+      })),
       topBiologyResearcher: topDomain.entries[0],
       moderation: packet.moderation,
       governance: {

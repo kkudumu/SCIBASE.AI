@@ -4,12 +4,15 @@ const assert = require("assert");
 const community = require("../data/sample-community.json");
 const {
   buildCommunityReputationPacket,
+  buildCitationPages,
   buildContributionLedger,
   buildContributorGraph,
   buildGovernanceReport,
   buildLeaderboards,
   buildModerationSignals,
+  buildProjectTimelines,
   buildReputationChangeLedger,
+  buildResearcherProfiles,
   buildReviewQualityAudits,
   createInlineComment,
   createPeerReview,
@@ -122,6 +125,29 @@ function testLeaderboardsAndPacket() {
   assert.ok(packet.packetHash.length >= 12);
 }
 
+function testProfilesTimelinesAndCitationPages() {
+  const profiles = buildResearcherProfiles(community);
+  const timelines = buildProjectTimelines(community);
+  const citationPages = buildCitationPages(community);
+  const ada = profiles.find((profile) => profile.researcherId === "u-ada");
+  const floodTimeline = timelines.find((timeline) => timeline.projectId === "project-flood-microbiome");
+  const floodCitation = citationPages.find((page) => page.projectId === "project-flood-microbiome");
+
+  assert.ok(ada.reviewHistory.some((review) => review.projectId === "project-civic-survey"));
+  assert.ok(ada.commentHistory.some((comment) => comment.projectId === "project-civic-survey"));
+  assert.ok(ada.creditSummary.visibleCitationCredits.length >= 2);
+  assert.ok(ada.profileHash.length >= 12);
+
+  assert.strictEqual(floodTimeline.eventCount, floodTimeline.events.length);
+  assert.ok(floodTimeline.events.some((event) => event.type === "review"));
+  assert.ok(floodTimeline.events.some((event) => event.type === "comment"));
+  assert.ok(floodTimeline.timelineHash.length >= 12);
+
+  assert.ok(floodCitation.credits.some((credit) => credit.researcherId === "u-ada"));
+  assert.ok(floodCitation.citationText.includes("Ada Chen"));
+  assert.ok(floodCitation.citationHash.length >= 12);
+}
+
 testReviewTemplatesAndPrivacy();
 testInlineComments();
 testContributionLedgerAndGraph();
@@ -129,5 +155,6 @@ testTransparentReputationScoring();
 testModerationSignals();
 testGovernanceReport();
 testLeaderboardsAndPacket();
+testProfilesTimelinesAndCitationPages();
 
 console.log("community-reputation-ledger tests passed");

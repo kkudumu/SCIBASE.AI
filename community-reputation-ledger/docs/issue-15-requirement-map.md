@@ -7,9 +7,11 @@ This module implements a deterministic community and reputation milestone for SC
 | Structured peer reviews | `selectReviewTemplate()` and `createPeerReview()` support discipline-specific criteria, scores, narrative fields, recommendations, and review history hashes. |
 | Public, semi-private, anonymous, and double-blind modes | `createPeerReview()` normalizes review visibility and anonymizes reviewer identity for anonymous and double-blind reviews. |
 | Inline comments on documents, datasets, code blocks, and notebooks | `createInlineComment()` stores target kind, path, anchors, line ranges, visibility mode, status, and comment hashes. |
+| Review history on reviewer profiles and project timelines | `buildResearcherProfiles()` exposes per-researcher review/comment history, while `buildProjectTimelines()` combines reviews, comments, and contributions into chronological project events. |
 | Timestamped contributor credits | `buildContributionLedger()` creates timestamped contribution records with stable hashes and citation visibility. |
 | CRediT taxonomy support | Contribution roles are validated against the CRediT role list exported as `CREDIT_ROLES`. |
 | Git-style contributor graphs | `buildContributorGraph()` aggregates contributor/project edges, role counts, contribution counts, and credit totals. |
+| Visible credit on researcher profiles and citation pages | `buildResearcherProfiles()` returns visible citation credits for each researcher, and `buildCitationPages()` produces project-level credit lists and citation text. |
 | Transparent reputation metrics | `scoreResearcher()` exposes score components for citations, forks, endorsements, peer review, reproducibility badges, bounty completions, contribution credit, and penalties. |
 | Abuse-resistant moderation hooks | `buildModerationSignals()` flags self-endorsements, reciprocal endorsements, thin review narratives, and flagged researcher metrics before scores are trusted. |
 | Trustworthy score governance | `buildGovernanceReport()` audits review quality, reputation score deltas, open appeals, appeal due dates, and required governance actions before reputation changes are published. |

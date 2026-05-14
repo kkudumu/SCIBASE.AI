@@ -14,6 +14,12 @@ console.log(
       snapshot: packet.snapshot,
       readyForSubmission: packet.dashboard.readyForSubmission,
       formatting: packet.formatting,
+      offlineConflicts: {
+        queueCount: packet.offlineConflicts.queueCount,
+        appliedCount: packet.offlineConflicts.appliedCount,
+        conflictCount: packet.offlineConflicts.conflictCount,
+        conflictCodes: packet.offlineConflicts.conflictCodes,
+      },
       sections: packet.dashboard.sections,
       outlineHash: packet.outline.exportHash,
     },

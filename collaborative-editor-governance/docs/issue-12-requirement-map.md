@@ -1,6 +1,6 @@
 # Issue #12 Requirement Map
 
-This module is a deterministic milestone for SCIBASE issue #12, Real-time collaborative research editor & interface. It focuses on review governance and operation replay for scientific documents.
+This module is a deterministic milestone for SCIBASE issue #12, Real-time collaborative research editor & interface. It focuses on review governance, operation replay, and offline conflict handling for scientific documents.
 
 | Issue requirement | Implementation |
 | --- | --- |
@@ -12,11 +12,12 @@ This module is a deterministic milestone for SCIBASE issue #12, Real-time collab
 | Real-time operation application | `applyOperation()` and `applyOperationBatch()` deterministically apply insert, update, delete, comment, suggestion, and task operations. |
 | Comments and suggestions | Comment and suggestion operations are stored with block links, actor IDs, and open/pending status. |
 | Section locks | `isSectionLocked()` rejects edits from non-owners while allowing the lock owner to edit. |
+| Offline/local caching conflict recovery | `rebaseOfflineQueue()` and `buildOfflineConflictReport()` process queued offline edits, detect stale block versions, preserve safe edits as suggestions, flag missing review targets, and create restore-ready snapshots. |
 | Version history and autosave | `createVersionSnapshot()` records block count, open review items, content hash, and timestamp. |
 | Task workflow | Task operations and dashboard open-task reporting support editorial handoff. |
 | Collaborator presence | `buildPresenceSummary()` turns presence data into reviewer-ready cursor and staleness state. |
 | Publication outline export | `exportPublicationOutline()` summarizes sections, block types, word counts, and export hash. |
-| Reviewer demo | `npm run demo` prints accepted/rejected operation counts, snapshot, dashboard sections, and outline hash. |
+| Reviewer demo | `npm run demo` prints accepted/rejected operation counts, snapshot, offline conflict codes, dashboard sections, and outline hash. |
 
 ## Verification
 

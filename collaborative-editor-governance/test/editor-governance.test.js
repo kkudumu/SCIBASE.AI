@@ -6,11 +6,13 @@ const {
   applyOperation,
   applyOperationBatch,
   buildCollaborativeEditorPacket,
+  buildOfflineConflictReport,
   buildReviewDashboard,
   buildScientificFormattingSummary,
   createVersionSnapshot,
   exportPublicationOutline,
   isSectionLocked,
+  rebaseOfflineQueue,
 } = require("../src/editor-governance");
 
 function testSectionLocks() {
@@ -67,6 +69,33 @@ function testScientificFormattingSummary() {
   assert.strictEqual(summary.publicationTemplates[0].style, "nature");
 }
 
+function testOfflineQueueRebase() {
+  const report = rebaseOfflineQueue(sample.document, sample.document.offlineQueues[0]);
+
+  assert.strictEqual(report.clientId, "offline-u-3");
+  assert.strictEqual(report.appliedCount, 2);
+  assert.strictEqual(report.conflictCount, 4);
+  assert.ok(report.applied.find((item) => item.rebasedAs === "suggestion"));
+  assert.ok(report.conflicts.find((conflict) => conflict.code === "STALE_BLOCK_VERSION"));
+  assert.ok(report.conflicts.find((conflict) => conflict.code === "SECTION_LOCK_CONFLICT"));
+  assert.ok(report.conflicts.find((conflict) => conflict.code === "REVIEW_TARGET_MISSING"));
+  assert.ok(report.restoreSnapshot.contentHash);
+  assert.ok(report.auditHash.length >= 12);
+}
+
+function testOfflineConflictReport() {
+  const report = buildOfflineConflictReport(sample.document);
+
+  assert.strictEqual(report.queueCount, 1);
+  assert.strictEqual(report.appliedCount, 2);
+  assert.strictEqual(report.conflictCount, 4);
+  assert.deepStrictEqual(report.conflictCodes, [
+    "REVIEW_TARGET_MISSING",
+    "SECTION_LOCK_CONFLICT",
+    "STALE_BLOCK_VERSION",
+  ]);
+}
+
 function testFullPacket() {
   const packet = buildCollaborativeEditorPacket(sample.document, sample.operations);
 
@@ -74,6 +103,7 @@ function testFullPacket() {
   assert.strictEqual(packet.document.versions.length, 1);
   assert.strictEqual(packet.dashboard.openTasks.length, 1);
   assert.strictEqual(packet.dashboard.formatting.supportsLatex, true);
+  assert.strictEqual(packet.offlineConflicts.conflictCount, 4);
   assert.ok(packet.outline.exportHash);
 }
 
@@ -83,6 +113,8 @@ testOperationBatch();
 testSnapshotAndDashboard();
 testPublicationOutline();
 testScientificFormattingSummary();
+testOfflineQueueRebase();
+testOfflineConflictReport();
 testFullPacket();
 
 console.log("collaborative-editor-governance tests passed");

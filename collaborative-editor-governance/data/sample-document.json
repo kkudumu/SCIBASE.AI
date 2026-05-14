@@ -77,7 +77,50 @@
         "requiredSections": ["abstract", "methods", "results", "references"]
       }
     ],
-    "versions": []
+    "versions": [],
+    "offlineQueues": [
+      {
+        "clientId": "offline-u-3",
+        "baseVersionId": "snapshot-draft-1",
+        "baseContentHash": "draft-base-hash",
+        "operations": [
+          {
+            "type": "update-block",
+            "actorId": "u-3",
+            "blockId": "block-abstract",
+            "baseBlockHash": "stale-abstract-hash",
+            "content": "We report flood-linked microbiome shifts with a larger validation cohort.",
+            "rebasedSuggestionId": "suggestion-offline-abstract"
+          },
+          {
+            "type": "update-block",
+            "actorId": "u-3",
+            "blockId": "block-methods",
+            "baseBlockHash": "stale-methods-hash",
+            "content": "Offline edit should wait because the methods section is locked."
+          },
+          {
+            "type": "comment",
+            "id": "comment-missing-block",
+            "actorId": "u-3",
+            "blockId": "block-removed",
+            "body": "This comment targets a block that disappeared while offline."
+          },
+          {
+            "type": "insert-block",
+            "actorId": "u-3",
+            "index": 4,
+            "block": {
+              "id": "block-offline-note",
+              "sectionId": "discussion",
+              "type": "markdown",
+              "content": "Offline reviewer note preserved after reconnect.",
+              "metadata": { "heading": "Discussion" }
+            }
+          }
+        ]
+      }
+    ]
   },
   "operations": [
     {

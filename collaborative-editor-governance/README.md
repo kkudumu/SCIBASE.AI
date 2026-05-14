@@ -13,6 +13,7 @@ The issue asks for a real-time collaborative research editor. This module focuse
 - Autosave/version snapshot with content hash and open review counts.
 - Open-task dashboard and collaborator presence summary.
 - Scientific formatting summary covering LaTeX, code highlighting, notebook blocks, reference-provider metadata, citation resolution, and publication templates.
+- Offline collaboration conflict report for queued client operations, stale block versions, section-lock conflicts, missing review targets, safe suggestion conversion, restore snapshots, and audit hashes.
 - Publication outline export with section block types, word counts, and export hash.
 - Sample document fixture, tests, requirement map, CLI demo, and short demo GIF.
 
@@ -40,6 +41,10 @@ Expected demo shape:
       "unresolvedCitations": []
     }
   },
+  "offlineConflicts": {
+    "queueCount": 1,
+    "conflictCodes": ["REVIEW_TARGET_MISSING", "SECTION_LOCK_CONFLICT", "STALE_BLOCK_VERSION"]
+  },
   "outlineHash": "..."
 }
 ```
@@ -50,7 +55,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/editor-governance.js` - operation replay, locks, snapshots, dashboard, and outline export.
+- `src/editor-governance.js` - operation replay, locks, snapshots, dashboard, offline conflict resolution, and outline export.
 - `data/sample-document.json` - reviewable scientific document fixture.
 - `test/editor-governance.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

@@ -32,6 +32,7 @@ function normalizeDocument(documentInput) {
     versions: asArray(documentInput.versions),
     references: asArray(documentInput.references),
     publicationTemplates: asArray(documentInput.publicationTemplates),
+    offlineQueues: asArray(documentInput.offlineQueues),
   };
 }
 
@@ -278,6 +279,145 @@ function exportPublicationOutline(documentInput) {
   };
 }
 
+function blockContentHash(block) {
+  return block ? hashRecord({ content: block.content || "", metadata: block.metadata || {} }) : null;
+}
+
+function offlineConflictForOperation(document, operation) {
+  const op = operation || {};
+  const actorId = op.actorId || "unknown";
+  const blockIndex = op.blockId ? findBlockIndex(document, op.blockId) : -1;
+  const currentBlock = blockIndex >= 0 ? document.blocks[blockIndex] : null;
+  const sectionId = op.sectionId || (currentBlock && currentBlock.sectionId) || (op.block && op.block.sectionId);
+  const conflicts = [];
+
+  if (op.blockId && !currentBlock && op.type !== "insert-block") {
+    conflicts.push({
+      code: "REVIEW_TARGET_MISSING",
+      severity: "high",
+      message: "Queued operation targets a block that no longer exists.",
+      blockId: op.blockId,
+      resolution: "manual-review",
+    });
+  }
+
+  if (sectionId && isSectionLocked(document, sectionId, actorId)) {
+    conflicts.push({
+      code: "SECTION_LOCK_CONFLICT",
+      severity: "high",
+      message: "Queued operation conflicts with an active section lock.",
+      sectionId,
+      actorId,
+      resolution: "defer-until-unlocked",
+    });
+  }
+
+  if (currentBlock && op.baseBlockHash && op.baseBlockHash !== blockContentHash(currentBlock)) {
+    conflicts.push({
+      code: op.type === "update-block" ? "STALE_BLOCK_VERSION" : "REVIEW_CONTEXT_STALE",
+      severity: "medium",
+      message: "Queued operation was based on an older block version.",
+      blockId: op.blockId,
+      expectedHash: op.baseBlockHash,
+      actualHash: blockContentHash(currentBlock),
+      resolution: op.type === "update-block" ? "converted-to-suggestion" : "preserve-with-context-warning",
+    });
+  }
+
+  return conflicts;
+}
+
+function rebaseOfflineQueue(documentInput, queueInput) {
+  let document = normalizeDocument(documentInput);
+  const queue = queueInput || {};
+  const conflicts = [];
+  const applied = [];
+  const baseSnapshot = createVersionSnapshot(document, `${queue.clientId || "offline"} rebase base`);
+
+  for (const operation of asArray(queue.operations)) {
+    const operationConflicts = offlineConflictForOperation(document, operation);
+    conflicts.push(...operationConflicts.map((conflict) => ({
+      ...conflict,
+      operationHash: hashRecord(operation),
+    })));
+
+    const hasBlockingConflict = operationConflicts.some(
+      (conflict) => conflict.code === "SECTION_LOCK_CONFLICT" || conflict.code === "REVIEW_TARGET_MISSING",
+    );
+    if (hasBlockingConflict) continue;
+
+    const staleUpdate = operationConflicts.some((conflict) => conflict.code === "STALE_BLOCK_VERSION");
+    const operationToApply = staleUpdate
+      ? {
+        type: "suggestion",
+        id: operation.rebasedSuggestionId || `offline-suggestion-${applied.length + 1}`,
+        actorId: operation.actorId,
+        blockId: operation.blockId,
+        proposedContent: operation.content || operation.proposedContent || "",
+      }
+      : operation;
+
+    const result = applyOperation(document, operationToApply);
+    if (result.accepted) {
+      document = result.document;
+      applied.push({
+        originalOperationHash: hashRecord(operation),
+        appliedOperationHash: result.operationHash,
+        rebasedAs: staleUpdate ? "suggestion" : operation.type,
+      });
+    } else {
+      conflicts.push({
+        code: "REBASE_APPLICATION_REJECTED",
+        severity: "medium",
+        message: "Queued operation could not be applied after conflict checks.",
+        reason: result.reason,
+        operationHash: result.operationHash,
+        resolution: "manual-review",
+      });
+    }
+  }
+
+  const restoreSnapshot = createVersionSnapshot(document, `${queue.clientId || "offline"} restore point`);
+
+  return {
+    clientId: queue.clientId || "offline-client",
+    baseVersionId: queue.baseVersionId || null,
+    baseContentHash: queue.baseContentHash || baseSnapshot.contentHash,
+    appliedCount: applied.length,
+    conflictCount: conflicts.length,
+    applied,
+    conflicts,
+    restoreSnapshot,
+    auditHash: hashRecord({
+      clientId: queue.clientId,
+      applied,
+      conflicts,
+      restoreSnapshot: restoreSnapshot.contentHash,
+    }),
+  };
+}
+
+function buildOfflineConflictReport(documentInput) {
+  const document = normalizeDocument(documentInput);
+  const queueReports = document.offlineQueues.map((queue) => rebaseOfflineQueue(document, queue));
+  const conflicts = queueReports.flatMap((report) => report.conflicts);
+
+  return {
+    documentId: document.id,
+    queueCount: queueReports.length,
+    appliedCount: queueReports.reduce((sum, report) => sum + report.appliedCount, 0),
+    conflictCount: conflicts.length,
+    conflictCodes: [...new Set(conflicts.map((conflict) => conflict.code))].sort(),
+    queues: queueReports,
+    auditHash: hashRecord(queueReports.map((report) => ({
+      clientId: report.clientId,
+      appliedCount: report.appliedCount,
+      conflictCount: report.conflictCount,
+      auditHash: report.auditHash,
+    }))),
+  };
+}
+
 function buildCollaborativeEditorPacket(documentInput, operations) {
   const batch = applyOperationBatch(documentInput, operations);
   const snapshot = createVersionSnapshot(batch.document, "post-operation autosave");
@@ -292,6 +432,7 @@ function buildCollaborativeEditorPacket(documentInput, operations) {
     snapshot,
     dashboard: buildReviewDashboard(documentWithSnapshot),
     formatting: buildScientificFormattingSummary(documentWithSnapshot),
+    offlineConflicts: buildOfflineConflictReport(documentInput),
     outline: exportPublicationOutline(documentWithSnapshot),
   };
 }
@@ -300,6 +441,7 @@ module.exports = {
   applyOperation,
   applyOperationBatch,
   buildCollaborativeEditorPacket,
+  buildOfflineConflictReport,
   buildPresenceSummary,
   buildReviewDashboard,
   buildScientificFormattingSummary,
@@ -308,4 +450,5 @@ module.exports = {
   hashRecord,
   isSectionLocked,
   normalizeDocument,
+  rebaseOfflineQueue,
 };

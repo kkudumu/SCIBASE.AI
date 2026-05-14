@@ -268,6 +268,40 @@ function recommendCitations(documentInput, citationCorpus = [], options = {}) {
     .slice(0, options.limit || 5);
 }
 
+function buildSimilarPapersWidget(documentInput, openAccessCorpus = [], citationCorpus = [], limit = 5) {
+  const similarityMatches = detectSimilarity(documentInput, openAccessCorpus).map((match) => ({
+    source: "open-access-corpus",
+    id: match.sourceId,
+    title: match.title,
+    score: Number((match.similarity * 100).toFixed(2)),
+    reasons: match.overlappingTerms.map((term) => `Shared term: ${term}`),
+    action: {
+      type: "open-similar-paper",
+      sourceId: match.sourceId,
+    },
+  }));
+  const citationMatches = recommendCitations(documentInput, citationCorpus, { style: "apa", limit }).map((citation) => ({
+    source: "citation-corpus",
+    id: citation.id,
+    title: citation.title,
+    doi: citation.doi,
+    score: citation.score,
+    reasons: [
+      ...citation.matchedTerms.map((term) => `Citation context match: ${term}`),
+      citation.year ? `Published ${citation.year}` : null,
+    ].filter(Boolean),
+    action: {
+      type: "insert-or-open-citation",
+      doi: citation.doi,
+    },
+  }));
+
+  return [...similarityMatches, ...citationMatches]
+    .sort((left, right) => right.score - left.score || left.title.localeCompare(right.title))
+    .slice(0, limit)
+    .map((item, index) => ({ rank: index + 1, ...item }));
+}
+
 function formatReference(reference, style = "apa") {
   const authors = asArray(reference.authors).join(", ") || "Unknown authors";
   const year = reference.year || "n.d.";
@@ -290,6 +324,7 @@ function buildResearchToolsPacket(input) {
   };
   const reviewReport = reviewManuscript(document, { domain: document.domain, openAccessCorpus });
   const citationRecommendations = recommendCitations(document, citationCorpus, { style: "apa", limit: 5 });
+  const similarPapersWidget = buildSimilarPapersWidget(document, openAccessCorpus, citationCorpus, 5);
 
   return {
     document: {
@@ -300,17 +335,19 @@ function buildResearchToolsPacket(input) {
     summaries,
     reviewReport,
     citationRecommendations,
+    similarPapersWidget,
     insertActions: citationRecommendations.map((citation) => ({
       action: "insert-citation",
       doi: citation.doi,
       label: citation.formatted,
     })),
-    packetHash: hashRecord({ documentId: document.id, summaries, reviewReport, citationRecommendations }),
+    packetHash: hashRecord({ documentId: document.id, summaries, reviewReport, citationRecommendations, similarPapersWidget }),
   };
 }
 
 module.exports = {
   REVIEW_TEMPLATES,
+  buildSimilarPapersWidget,
   buildResearchToolsPacket,
   detectSimilarity,
   formatReference,

@@ -3,6 +3,7 @@
 const assert = require("assert");
 const sample = require("../data/sample-research.json");
 const {
+  buildSimilarPapersWidget,
   buildResearchToolsPacket,
   detectSimilarity,
   formatReference,
@@ -48,6 +49,21 @@ function testSimilarityAndCitations() {
   assert.ok(citations[0].formatted.includes("https://doi.org/"));
 }
 
+function testSimilarPapersWidget() {
+  const widget = buildSimilarPapersWidget(
+    sample.document,
+    sample.openAccessCorpus,
+    sample.citationCorpus,
+    3,
+  );
+
+  assert.strictEqual(widget.length, 3);
+  assert.strictEqual(widget[0].rank, 1);
+  assert.ok(widget.some((item) => item.source === "open-access-corpus"));
+  assert.ok(widget.some((item) => item.source === "citation-corpus"));
+  assert.ok(widget.every((item) => item.action.type));
+}
+
 function testReferenceFormatting() {
   const reference = sample.citationCorpus[0];
 
@@ -61,6 +77,7 @@ function testPacket() {
 
   assert.deepStrictEqual(Object.keys(packet.summaries), ["abstract", "executive", "layperson"]);
   assert.strictEqual(packet.citationRecommendations.length, packet.insertActions.length);
+  assert.ok(packet.similarPapersWidget.length > 0);
   assert.ok(packet.reviewReport.reportHash);
   assert.ok(packet.packetHash.length >= 12);
 }
@@ -68,6 +85,7 @@ function testPacket() {
 testSummaries();
 testReviewDiagnostics();
 testSimilarityAndCitations();
+testSimilarPapersWidget();
 testReferenceFormatting();
 testPacket();
 

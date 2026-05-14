@@ -13,6 +13,7 @@ console.log(
       qualityScore: packet.reviewReport.qualityScore,
       reviewFindings: packet.reviewReport.findings.map((finding) => `${finding.category}:${finding.message}`),
       topCitation: packet.citationRecommendations[0],
+      similarPapers: packet.similarPapersWidget,
       insertActions: packet.insertActions.length,
       packetHash: packet.packetHash,
     },

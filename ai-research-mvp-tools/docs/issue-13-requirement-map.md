@@ -12,6 +12,7 @@ This module implements deterministic AI-assisted research MVP tools for SCIBASE 
 | Statistical error detection | `reviewManuscript()` flags p-values without confidence intervals and missing template-specific statistical reporting. |
 | Compliance checks | Domain templates require sections such as ethics and data availability. |
 | AI citation tool | `recommendCitations()` ranks citation candidates by keyword overlap, recency, and citation signal while excluding already cited DOIs. |
+| Similar papers widget | `buildSimilarPapersWidget()` combines open-access similarity evidence and citation-corpus matches into ranked recommendations with user actions. |
 | Auto-formatted references | `formatReference()` supports APA, MLA, and Nature-style output. |
 | One-click insert metadata | `buildResearchToolsPacket()` returns `insertActions` for citation insertion. |
 | Reviewer demo | `npm run demo` prints summary modes, review findings, top citation, insert-action count, and packet hash. |

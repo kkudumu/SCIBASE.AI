@@ -12,6 +12,7 @@ The issue asks for paper summaries, pre-review diagnostics, and citation assista
 - Pre-review diagnostics for missing required sections, ethics/data availability gaps, statistical reporting gaps, clarity signals, and similarity evidence.
 - Similarity signal against a local open-access corpus fixture.
 - Citation recommendations ranked by manuscript keyword overlap, recency, and citation signal.
+- Similar-papers widget combining open-access similarity signals and citation-corpus matches with reasons and actions.
 - APA, MLA, and Nature-style reference formatting.
 - One-click citation insert-action metadata.
 - Sample manuscript/corpus fixture, tests, requirement map, CLI demo, and short demo GIF.
@@ -35,6 +36,14 @@ Expected demo shape:
   "topCitation": {
     "doi": "10.1016/j.watres.2025.120001"
   },
+  "similarPapers": [
+    {
+      "source": "open-access-corpus",
+      "action": {
+        "type": "open-similar-paper"
+      }
+    }
+  ],
   "insertActions": 2,
   "packetHash": "..."
 }

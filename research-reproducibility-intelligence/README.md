@@ -8,6 +8,7 @@ This module turns a scientific project packet into a deterministic assistant rep
 
 - Auto peer-review report with manuscript structure checks, clarity findings, statistical reporting signals, and claim-to-evidence alignment.
 - Reproducibility report with artifact fingerprinting, pinned dependency checks, runnable file detection, data dictionary/source data checks, and a runbook.
+- Sandbox execution plan and evidence validation for notebooks/scripts, including disabled-network policy, resource limits, output hashes, execution logs, and reported-output consistency checks.
 - Linked prior reproducibility attempts, sorted by current artifact fingerprint match and recency.
 - Research-gap feed that ranks corpus items by relevance, replication gap, limitation signals, and novelty.
 - Workflow orchestration that converts findings into staged, owner-assigned, evidence-hashed actions.
@@ -31,6 +32,13 @@ Expected demo shape:
   "readinessScore": 71,
   "peerReviewScore": 62,
   "reproducibilityStatus": "reproducible",
+  "sandboxSummary": {
+    "plannedRuns": 1,
+    "observedRuns": 1,
+    "cleanRuns": 1,
+    "consistentOutputs": 1,
+    "missingRuns": 0
+  },
   "workflowBlocked": true,
   "workflowRiskScore": 88,
   "topWorkflowAction": {

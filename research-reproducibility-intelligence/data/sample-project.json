@@ -41,6 +41,24 @@
     { "name": "pandas", "version": "2.2.2" },
     { "name": "scipy", "version": "1.13.0" }
   ],
+  "sandboxPolicy": {
+    "image": "python:3.12-slim",
+    "network": "disabled",
+    "cpu": "2",
+    "memory": "4g",
+    "timeoutSeconds": 1800
+  },
+  "executionEvidence": [
+    {
+      "targetId": "run-13846284",
+      "exitCode": 0,
+      "durationSeconds": 142,
+      "outputHashes": ["sha256:diversity-summary-2026", "sha256:moisture-effect-2026"],
+      "logUrl": "https://example.org/reproducibility/proj-microbiome-2026/logs/analysis-ipynb",
+      "generatedArtifacts": ["diversity-summary.csv", "moisture-effect.json"],
+      "reportedArtifacts": ["diversity-summary.csv", "moisture-effect.json"]
+    }
+  ],
   "workflowPreferences": {
     "reviewOwner": "Dr. Chen",
     "reproducibilityOwner": "Replication Desk",

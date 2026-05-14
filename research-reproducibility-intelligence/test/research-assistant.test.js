@@ -7,7 +7,9 @@ const {
   buildPeerReviewReport,
   buildResearchGapFeed,
   buildReproducibilityReport,
+  buildSandboxExecutionPlan,
   buildWorkflowOrchestration,
+  evaluateSandboxEvidence,
   overlapScore,
 } = require("../src/research-assistant");
 
@@ -33,10 +35,29 @@ function testReproducibilityReport() {
   assert.strictEqual(report.confidenceScore, 1);
   assert.ok(report.artifactFingerprint.length > 8);
   assert.ok(report.runnableFiles.includes("analysis.ipynb"));
+  assert.strictEqual(report.sandboxPlan.network, "disabled");
+  assert.strictEqual(report.sandboxPlan.targets[0].target, "analysis.ipynb");
+  assert.strictEqual(report.sandboxEvidence.summary.cleanRuns, 1);
+  assert.strictEqual(report.sandboxEvidence.summary.consistentOutputs, 1);
+  assert.ok(report.checks.find((check) => check.id === "sandbox-evidence-clean").passed);
+  assert.ok(report.checks.find((check) => check.id === "reported-output-consistency").passed);
   assert.strictEqual(report.linkedAttempts.length, 2);
   assert.strictEqual(report.linkedAttempts[0].id, "attempt-2026-04-dry-run");
   assert.strictEqual(report.linkedAttempts[0].matchesCurrentArtifacts, true);
   assert.ok(report.checks.find((check) => check.id === "attempt-history-linked").passed);
+}
+
+function testSandboxExecutionContract() {
+  const plan = buildSandboxExecutionPlan(sampleProject);
+  const evidence = evaluateSandboxEvidence(sampleProject, plan);
+
+  assert.strictEqual(plan.image, "python:3.12-slim");
+  assert.strictEqual(plan.targets.length, 1);
+  assert.ok(plan.targets[0].command.includes("jupyter nbconvert"));
+  assert.deepStrictEqual(plan.targets[0].expectedResultIds, ["result-1", "result-2"]);
+  assert.strictEqual(evidence.runs[0].status, "passed");
+  assert.deepStrictEqual(evidence.runs[0].missingReportedArtifacts, []);
+  assert.strictEqual(evidence.summary.missingRuns, 0);
 }
 
 function testResearchGapFeed() {
@@ -88,6 +109,7 @@ function testAssistantPacket() {
 testOverlapScore();
 testPeerReviewReport();
 testReproducibilityReport();
+testSandboxExecutionContract();
 testResearchGapFeed();
 testWorkflowOrchestration();
 testAssistantPacket();

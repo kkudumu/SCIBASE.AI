@@ -5,7 +5,8 @@ This module is a deterministic milestone for SCIBASE issue #16, AI-Powered Resea
 | Issue requirement | Implementation |
 | --- | --- |
 | Auto peer review reports | `buildPeerReviewReport()` checks manuscript structure, clarity risks, statistical reporting signals, and claim-to-evidence alignment. |
-| Reproducibility checker | `buildReproducibilityReport()` evaluates README/runbook presence, pinned dependencies, runnable artifacts, data dictionary, source data, and produces a reproducibility runbook. |
+| Reproducibility checker | `buildReproducibilityReport()` evaluates README/runbook presence, pinned dependencies, runnable artifacts, data dictionary, source data, sandbox execution plans, sandbox run evidence, reported-output consistency, and produces a reproducibility runbook. |
+| Auto-executes project code and notebooks in sandbox environments | `buildSandboxExecutionPlan()` creates disabled-network sandbox targets for notebooks/scripts with resource limits, read-only project mounts, writable output mounts, expected result IDs, and executable commands. `evaluateSandboxEvidence()` validates exit codes, output hashes, log URLs, generated artifacts, reported artifacts, clean-run counts, and missing-run counts. |
 | Research gap finder | `buildResearchGapFeed()` scans a corpus fixture for relevance, low replication count, limitation language, and novelty signals, then ranks opportunities. |
 | Real-time insights and workflow automation | `buildWorkflowOrchestration()` turns review, reproducibility, and gap signals into staged actions with owners, blockers, dependencies, risk score, deadline, and evidence hashes. |
 | Integrated assistant packet | `buildAssistantPacket()` combines review, reproducibility, gap discovery, workflow orchestration, one readiness score, and a prioritized action queue. |

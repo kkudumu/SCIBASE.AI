@@ -64,8 +64,11 @@ function normalizeProject(project) {
     results: asArray(project.results),
     corpus: asArray(project.corpus),
     interests: asArray(project.interests),
+    executionEvidence: asArray(project.executionEvidence),
+    executionTargets: asArray(project.executionTargets),
     reproducibilityAttempts: asArray(project.reproducibilityAttempts),
     workflowPreferences: project.workflowPreferences || {},
+    sandboxPolicy: project.sandboxPolicy || {},
   };
 }
 
@@ -191,6 +194,8 @@ function buildReproducibilityReport(projectInput, template = DEFAULT_REVIEW_TEMP
       }
       return String(b.date || "").localeCompare(String(a.date || ""));
     });
+  const sandboxPlan = buildSandboxExecutionPlan(project, runnableFiles, dataFiles, artifactFingerprint);
+  const sandboxEvidence = evaluateSandboxEvidence(project, sandboxPlan);
 
   const checks = [
     {
@@ -223,6 +228,21 @@ function buildReproducibilityReport(projectInput, template = DEFAULT_REVIEW_TEMP
       passed: linkedAttempts.length > 0,
       detail: "Previous reproducibility attempts are linked",
     },
+    {
+      id: "sandbox-plan-ready",
+      passed: sandboxPlan.targets.length > 0,
+      detail: "Sandbox execution targets are defined for runnable artifacts",
+    },
+    {
+      id: "sandbox-evidence-clean",
+      passed: sandboxEvidence.summary.cleanRuns === sandboxPlan.targets.length && sandboxPlan.targets.length > 0,
+      detail: "Sandbox execution evidence has zero failed runs",
+    },
+    {
+      id: "reported-output-consistency",
+      passed: sandboxEvidence.summary.consistentOutputs === sandboxPlan.targets.length && sandboxPlan.targets.length > 0,
+      detail: "Sandbox evidence links generated outputs to reported results",
+    },
   ];
 
   const passed = checks.filter((check) => check.passed).length;
@@ -236,6 +256,8 @@ function buildReproducibilityReport(projectInput, template = DEFAULT_REVIEW_TEMP
     missingFiles,
     runnableFiles,
     dataFiles,
+    sandboxPlan,
+    sandboxEvidence,
     linkedAttempts,
     checks,
     runbook: [
@@ -244,6 +266,96 @@ function buildReproducibilityReport(projectInput, template = DEFAULT_REVIEW_TEMP
       "Compare generated outputs against the reported results manifest.",
       "Attach logs and hashes to the reproducibility attempt record.",
     ],
+  };
+}
+
+function buildSandboxExecutionPlan(projectInput, runnableFilesInput, dataFilesInput, artifactFingerprint) {
+  const project = normalizeProject(projectInput);
+  const runnableFiles = runnableFilesInput || project.files.map((file) => file.name || "").filter(Boolean);
+  const dataFiles = dataFilesInput || [];
+  const policy = project.sandboxPolicy;
+  const defaultImage = policy.image || "python:3.12-slim";
+  const network = policy.network || "disabled";
+  const resourceLimits = {
+    cpu: policy.cpu || "2",
+    memory: policy.memory || "4g",
+    timeoutSeconds: policy.timeoutSeconds || 1800,
+  };
+  const explicitTargets = project.executionTargets.map((target) => String(target));
+  const targets = (explicitTargets.length > 0 ? explicitTargets : runnableFiles)
+    .map((target) => String(target))
+    .filter((target) => executableCommandFor(target))
+    .map((target) => ({
+      id: `run-${fingerprint({ projectId: project.id, target }).slice(0, 8)}`,
+      target,
+      command: executableCommandFor(target),
+      requiredDataFiles: dataFiles,
+      expectedResultIds: project.results.map((result) => result.id),
+    }));
+
+  return {
+    image: defaultImage,
+    network,
+    resourceLimits,
+    artifactFingerprint,
+    mounts: [
+      { source: "project", target: "/workspace/project", mode: "read-only" },
+      { source: "outputs", target: "/workspace/outputs", mode: "read-write" },
+    ],
+    targets,
+  };
+}
+
+function executableCommandFor(fileName) {
+  if (/\.ipynb$/i.test(fileName)) {
+    return `jupyter nbconvert --to notebook --execute ${fileName} --output /workspace/outputs/${fileName}`;
+  }
+  if (/\.py$/i.test(fileName)) return `python ${fileName}`;
+  if (/\.r$/i.test(fileName)) return `Rscript ${fileName}`;
+  if (/\.rmd$/i.test(fileName)) return `Rscript -e "rmarkdown::render('${fileName}')"`;
+  if (/\.jl$/i.test(fileName)) return `julia ${fileName}`;
+  if (/\.sh$/i.test(fileName)) return `bash ${fileName}`;
+  return null;
+}
+
+function evaluateSandboxEvidence(projectInput, sandboxPlanInput) {
+  const project = normalizeProject(projectInput);
+  const sandboxPlan = sandboxPlanInput || buildSandboxExecutionPlan(project);
+  const targetIds = new Set(sandboxPlan.targets.map((target) => target.id));
+  const runs = project.executionEvidence
+    .filter((run) => targetIds.has(run.targetId))
+    .map((run) => {
+      const outputHashes = asArray(run.outputHashes).filter(Boolean);
+      const generatedArtifacts = asArray(run.generatedArtifacts).map(String);
+      const reportedArtifacts = asArray(run.reportedArtifacts).map(String);
+      const missingReportedArtifacts = reportedArtifacts.filter(
+        (artifact) => !generatedArtifacts.includes(artifact),
+      );
+      return {
+        targetId: run.targetId,
+        status: run.exitCode === 0 && outputHashes.length > 0 ? "passed" : "failed",
+        exitCode: Number.isInteger(run.exitCode) ? run.exitCode : null,
+        durationSeconds: run.durationSeconds || null,
+        outputHashes,
+        logUrl: run.logUrl || null,
+        generatedArtifacts,
+        reportedArtifacts,
+        missingReportedArtifacts,
+        outputConsistency: missingReportedArtifacts.length === 0 && reportedArtifacts.length > 0,
+      };
+    });
+  const cleanRuns = runs.filter((run) => run.status === "passed").length;
+  const consistentOutputs = runs.filter((run) => run.outputConsistency).length;
+
+  return {
+    runs,
+    summary: {
+      plannedRuns: sandboxPlan.targets.length,
+      observedRuns: runs.length,
+      cleanRuns,
+      consistentOutputs,
+      missingRuns: Math.max(0, sandboxPlan.targets.length - runs.length),
+    },
   };
 }
 
@@ -500,10 +612,12 @@ function buildAssistantPacket(projectInput) {
 module.exports = {
   DEFAULT_REVIEW_TEMPLATE,
   buildAssistantPacket,
+  buildSandboxExecutionPlan,
   buildPeerReviewReport,
   buildResearchGapFeed,
   buildReproducibilityReport,
   buildWorkflowOrchestration,
+  evaluateSandboxEvidence,
   fingerprint,
   normalizeProject,
   overlapScore,

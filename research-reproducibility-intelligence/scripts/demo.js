@@ -12,6 +12,8 @@ console.log(
       readinessScore: packet.readinessScore,
       peerReviewScore: packet.peerReview.score,
       reproducibilityStatus: packet.reproducibility.status,
+      sandboxTarget: packet.reproducibility.sandboxPlan.targets[0],
+      sandboxSummary: packet.reproducibility.sandboxEvidence.summary,
       workflowBlocked: packet.workflow.blocked,
       workflowRiskScore: packet.workflow.riskScore,
       topWorkflowAction: packet.workflow.actions[0],

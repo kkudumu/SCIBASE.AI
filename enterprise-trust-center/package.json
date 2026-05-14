@@ -1,0 +1,12 @@
+{
+  "name": "scibase-enterprise-trust-center",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-contained enterprise tooling milestone for SCIBASE institutional trust center workflows.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/trust-center.js && node --check scripts/demo.js && node --check test/trust-center.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/trust-center.test.js"
+  }
+}

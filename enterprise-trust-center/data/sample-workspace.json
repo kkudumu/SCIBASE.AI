@@ -1,0 +1,68 @@
+{
+  "id": "inst-borealis",
+  "name": "Borealis Research Institute",
+  "plan": "enterprise",
+  "users": [
+    { "id": "u-001", "status": "active", "role": "admin", "mfaEnabled": true },
+    { "id": "u-002", "status": "active", "role": "principal-investigator", "mfaEnabled": true },
+    { "id": "u-003", "status": "active", "role": "researcher", "mfaEnabled": false },
+    { "id": "u-004", "status": "invited", "role": "reviewer", "mfaEnabled": false }
+  ],
+  "projects": [
+    { "id": "p-101", "title": "Longitudinal microbiome atlas", "auditLogEnabled": true },
+    { "id": "p-102", "title": "Climate model reproducibility pack", "auditLogEnabled": true },
+    { "id": "p-103", "title": "Retrospective cohort review", "auditLogEnabled": false }
+  ],
+  "integrations": [
+    {
+      "id": "semantic-scholar",
+      "name": "Semantic Scholar export",
+      "category": "literature",
+      "scopes": ["read:projects", "write:citations"],
+      "owners": ["u-002"],
+      "risk": "low",
+      "webhookUrl": "https://example.edu/hooks/semantic-scholar"
+    },
+    {
+      "id": "institutional-archive",
+      "name": "Institutional archive",
+      "category": "repository",
+      "scopes": ["read:projects", "write:projects"],
+      "owners": ["u-001"],
+      "risk": "medium",
+      "webhookUrl": "https://archive.example.edu/scibase/hooks"
+    }
+  ],
+  "apiKeys": [
+    {
+      "id": "key-001",
+      "integrationId": "semantic-scholar",
+      "status": "active",
+      "rotatedAt": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "key-002",
+      "integrationId": "institutional-archive",
+      "status": "active",
+      "rotatedAt": "2026-04-17T14:30:00Z"
+    }
+  ],
+  "events": [
+    { "id": "evt-001", "status": "delivered", "type": "project.exported" },
+    { "id": "evt-002", "status": "delivered", "type": "citation.synced" },
+    { "id": "evt-003", "status": "failed", "type": "dataset.archived" }
+  ],
+  "dataRequests": [
+    { "id": "dr-001", "status": "closed", "type": "export" },
+    { "id": "dr-002", "status": "overdue", "type": "deletion" }
+  ],
+  "incidents": [
+    { "id": "inc-001", "severity": "medium", "status": "open" },
+    { "id": "inc-002", "severity": "critical", "status": "resolved" }
+  ],
+  "auditLog": [
+    { "id": "audit-001", "action": "project.created", "actorId": "u-002" },
+    { "id": "audit-002", "action": "integration.connected", "actorId": "u-001" },
+    { "id": "audit-003", "action": "export.generated", "actorId": "u-001" }
+  ]
+}

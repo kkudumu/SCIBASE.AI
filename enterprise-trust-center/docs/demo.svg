@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">SCIBASE Enterprise Trust Center Demo</title>
+  <desc id="desc">Animated overview of the enterprise trust-center dashboard, compliance export, and signed webhook flow.</desc>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+    .small { font-size: 18px; }
+    .label { font-size: 15px; fill: #556070; }
+    .headline { font-size: 34px; font-weight: 700; }
+    .panel { fill: #ffffff; stroke: #d7dce5; stroke-width: 2; rx: 8; }
+    .bg { fill: #f4f7fb; }
+    .ok { fill: #1f9d55; }
+    .warn { fill: #c27803; }
+    .bad { fill: #c03221; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+  </style>
+  <rect class="bg" width="960" height="540"/>
+  <text x="48" y="64" class="headline">Enterprise Trust Center</text>
+  <text x="48" y="96" class="small">Borealis Research Institute · issue #19 milestone</text>
+  <rect x="48" y="130" width="260" height="140" class="panel"/>
+  <text x="72" y="164" class="label">Compliance status</text>
+  <text x="72" y="210" class="headline bad">blocked</text>
+  <text x="72" y="244" class="small">4 action items</text>
+  <rect x="350" y="130" width="260" height="140" class="panel"/>
+  <text x="374" y="164" class="label">Enterprise analytics</text>
+  <text x="374" y="200" class="small">MFA coverage: 66.67%</text>
+  <text x="374" y="230" class="small">Audit logs: 66.67%</text>
+  <rect x="652" y="130" width="260" height="140" class="panel"/>
+  <text x="676" y="164" class="label">API catalog</text>
+  <text x="676" y="200" class="small">2 integrations</text>
+  <text x="676" y="230" class="small">HMAC webhooks ready</text>
+  <rect x="48" y="308" width="864" height="152" class="panel"/>
+  <text x="72" y="346" class="label">Demo output</text>
+  <text x="72" y="380" class="mono">{ "status": "blocked", "integrations": 2,</text>
+  <text x="72" y="410" class="mono">  "firstSignedWebhook": "sha256=5dd7…",</text>
+  <text x="72" y="440" class="mono">  "exportId": "inst-borealis-trust-center-2026-05-14" }</text>
+  <circle cx="890" cy="62" r="8" class="ok">
+    <animate attributeName="opacity" values="1;0.25;1" dur="1.4s" repeatCount="indefinite"/>
+  </circle>
+</svg>

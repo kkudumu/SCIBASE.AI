@@ -32,6 +32,10 @@ function testReproducibilityReport() {
   assert.strictEqual(report.confidenceScore, 1);
   assert.ok(report.artifactFingerprint.length > 8);
   assert.ok(report.runnableFiles.includes("analysis.ipynb"));
+  assert.strictEqual(report.linkedAttempts.length, 2);
+  assert.strictEqual(report.linkedAttempts[0].id, "attempt-2026-04-dry-run");
+  assert.strictEqual(report.linkedAttempts[0].matchesCurrentArtifacts, true);
+  assert.ok(report.checks.find((check) => check.id === "attempt-history-linked").passed);
 }
 
 function testResearchGapFeed() {

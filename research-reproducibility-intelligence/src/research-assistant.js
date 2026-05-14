@@ -64,6 +64,7 @@ function normalizeProject(project) {
     results: asArray(project.results),
     corpus: asArray(project.corpus),
     interests: asArray(project.interests),
+    reproducibilityAttempts: asArray(project.reproducibilityAttempts),
   };
 }
 
@@ -168,6 +169,27 @@ function buildReproducibilityReport(projectInput, template = DEFAULT_REVIEW_TEMP
   const pinnedDependencies = project.dependencies.filter(
     (dependency) => dependency.version && !["latest", "*"].includes(String(dependency.version)),
   );
+  const artifactFingerprint = fingerprint({
+    files: project.files,
+    dependencies: project.dependencies,
+    results: project.results,
+  });
+  const linkedAttempts = project.reproducibilityAttempts
+    .map((attempt) => ({
+      id: attempt.id || "attempt-unknown",
+      url: attempt.url || null,
+      status: attempt.status || "unknown",
+      date: attempt.date || null,
+      artifactFingerprint: attempt.artifactFingerprint || null,
+      matchesCurrentArtifacts: attempt.artifactFingerprint === artifactFingerprint,
+      notes: attempt.notes || "",
+    }))
+    .sort((a, b) => {
+      if (a.matchesCurrentArtifacts !== b.matchesCurrentArtifacts) {
+        return a.matchesCurrentArtifacts ? -1 : 1;
+      }
+      return String(b.date || "").localeCompare(String(a.date || ""));
+    });
 
   const checks = [
     {
@@ -195,6 +217,11 @@ function buildReproducibilityReport(projectInput, template = DEFAULT_REVIEW_TEMP
       passed: dataFiles.length > 0,
       detail: "Machine-readable source data is present",
     },
+    {
+      id: "attempt-history-linked",
+      passed: linkedAttempts.length > 0,
+      detail: "Previous reproducibility attempts are linked",
+    },
   ];
 
   const passed = checks.filter((check) => check.passed).length;
@@ -202,16 +229,13 @@ function buildReproducibilityReport(projectInput, template = DEFAULT_REVIEW_TEMP
 
   return {
     projectId: project.id,
-    artifactFingerprint: fingerprint({
-      files: project.files,
-      dependencies: project.dependencies,
-      results: project.results,
-    }),
+    artifactFingerprint,
     confidenceScore,
     status: confidenceScore >= 0.8 ? "reproducible" : confidenceScore >= 0.5 ? "partial" : "at-risk",
     missingFiles,
     runnableFiles,
     dataFiles,
+    linkedAttempts,
     checks,
     runbook: [
       "Install pinned dependencies in a clean environment.",

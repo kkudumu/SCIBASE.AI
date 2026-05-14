@@ -41,6 +41,24 @@
     { "name": "pandas", "version": "2.2.2" },
     { "name": "scipy", "version": "1.13.0" }
   ],
+  "reproducibilityAttempts": [
+    {
+      "id": "attempt-2026-04-dry-run",
+      "date": "2026-04-18",
+      "status": "successful",
+      "url": "https://example.org/reproducibility/proj-microbiome-2026/attempt-2026-04-dry-run",
+      "artifactFingerprint": "d584da823d10eaa1",
+      "notes": "Clean-room rerun reproduced reported diversity trends and stored execution logs."
+    },
+    {
+      "id": "attempt-2026-03-pilot",
+      "date": "2026-03-12",
+      "status": "partial",
+      "url": "https://example.org/reproducibility/proj-microbiome-2026/attempt-2026-03-pilot",
+      "artifactFingerprint": "legacy-artifacts",
+      "notes": "Earlier attempt predated dependency pinning and did not include all source data."
+    }
+  ],
   "corpus": [
     {
       "id": "paper-1",

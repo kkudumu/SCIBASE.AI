@@ -12,6 +12,7 @@ console.log(
       readinessScore: packet.readinessScore,
       peerReviewScore: packet.peerReview.score,
       reproducibilityStatus: packet.reproducibility.status,
+      linkedAttempt: packet.reproducibility.linkedAttempts[0],
       topResearchGap: packet.researchGaps[0],
       nextActions: packet.nextActions.slice(0, 5),
     },

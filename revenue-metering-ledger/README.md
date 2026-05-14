@@ -7,6 +7,7 @@ The issue asks for subscriptions, usage-based AI compute billing, top-ups, insti
 ## What It Adds
 
 - Tiered plan evaluation with seats, annual discounts, volume discounts, and coupons.
+- Subscription lifecycle report for free trials, renewal cadence, auto-renewal, consortium pricing, and auto-scaling/top-up recommendations.
 - AI compute metering for summarization, peer review, and reproducibility checks.
 - Top-up credit ledger entries with provider metadata and hashes.
 - Payment-provider readiness checks for Stripe, PayPal, and institutional invoice profiles using non-secret metadata.
@@ -37,6 +38,15 @@ Expected demo shape:
   },
   "billableUsage": 85.8,
   "licensingMonthly": 350,
+  "subscriptionLifecycle": {
+    "lifecycleStatus": "trialing",
+    "renewal": {
+      "cadence": "annual"
+    },
+    "autoScaling": {
+      "recommendation": "buy-top-up-or-upgrade-plan"
+    }
+  },
   "entitlements": {
     "canUseInstitutionalAdmin": true,
     "canAccessLicensingApi": true
@@ -54,7 +64,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/revenue-ledger.js` - pricing, metering, top-ups, licensing, invoices, entitlements, and revenue reconciliation.
+- `src/revenue-ledger.js` - pricing, subscription lifecycle, metering, top-ups, licensing, invoices, entitlements, and revenue reconciliation.
 - `data/sample-revenue.json` - reviewable catalog/account/usage fixture.
 - `test/revenue-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

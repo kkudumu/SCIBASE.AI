@@ -69,6 +69,12 @@
     "billingCycle": "annual",
     "couponId": "CONSORTIUM10",
     "billingProvider": "institutional-invoice",
+    "trialStartedAt": "2026-05-01T00:00:00Z",
+    "trialEndsAt": "2026-05-31T00:00:00Z",
+    "nextRenewalAt": "2027-05-31T00:00:00Z",
+    "autoRenew": true,
+    "consortiumId": "northstar-consortium",
+    "evaluatedAt": "2026-05-14T00:00:00Z",
     "paymentProfile": {
       "billingContactEmail": "ap@northstar.example",
       "purchaseOrderId": "PO-2026-0142"

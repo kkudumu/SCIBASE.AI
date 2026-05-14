@@ -8,6 +8,7 @@ const {
   buildLicensingExport,
   buildPaymentIntegrationReadiness,
   buildRevenuePacket,
+  buildSubscriptionLifecycle,
   evaluateEntitlements,
   meterComputeUsage,
   reconcileRevenue,
@@ -83,6 +84,27 @@ function testInvoiceAndEntitlements() {
   assert.strictEqual(entitlements.computeOverageBilled, true);
 }
 
+function testSubscriptionLifecycle() {
+  const invoice = buildInvoiceSummary(
+    sample.catalog,
+    sample.account,
+    sample.usageEvents,
+    sample.topUpPurchases,
+    sample.analyticsSnapshot,
+  );
+  const lifecycle = buildSubscriptionLifecycle(sample.catalog, sample.account, invoice.usage);
+
+  assert.strictEqual(lifecycle.lifecycleStatus, "trialing");
+  assert.strictEqual(lifecycle.trial.active, true);
+  assert.strictEqual(lifecycle.renewal.cadence, "annual");
+  assert.strictEqual(lifecycle.renewal.autoRenew, true);
+  assert.strictEqual(lifecycle.consortiumPricing.eligible, true);
+  assert.strictEqual(lifecycle.consortiumPricing.consortiumId, "northstar-consortium");
+  assert.strictEqual(lifecycle.autoScaling.recommendation, "buy-top-up-or-upgrade-plan");
+  assert.strictEqual(lifecycle.autoScaling.recommendedTopUpPackId, "compute-100");
+  assert.ok(lifecycle.lifecycleHash.length >= 12);
+}
+
 function testRevenuePacket() {
   const packet = buildRevenuePacket(
     sample.catalog,
@@ -95,6 +117,8 @@ function testRevenuePacket() {
   assert.ok(packet.revenueHealth.recurringRevenue > 0);
   assert.ok(packet.revenueHealth.variableRevenue > 0);
   assert.strictEqual(packet.revenueHealth.totalDue, packet.invoice.total);
+  assert.strictEqual(packet.subscriptionLifecycle.lifecycleStatus, "trialing");
+  assert.strictEqual(packet.revenueHealth.lifecycleStatus, "trialing");
   assert.strictEqual(packet.reconciliation.status, "pass");
   assert.deepStrictEqual(packet.reconciliation.findings, []);
   assert.strictEqual(packet.revenueHealth.reconciliationStatus, "pass");
@@ -159,6 +183,7 @@ testTopUps();
 testLicensingExportRedactsPrivateFields();
 testPaymentIntegrationReadiness();
 testInvoiceAndEntitlements();
+testSubscriptionLifecycle();
 testRevenuePacket();
 testReconciliationFlagsMissingPaymentSetup();
 testReconciliationFlagsInvoiceMismatch();

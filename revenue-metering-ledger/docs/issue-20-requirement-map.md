@@ -5,6 +5,7 @@ This module is a deterministic milestone for SCIBASE issue #20, Revenue Infrastr
 | Issue requirement | Implementation |
 | --- | --- |
 | Tiered subscription billing | `selectPlan()` evaluates individual/institutional plans, seats, billing cycles, annual discounts, volume discounts, and coupons. |
+| Free trials, consortium pricing, and auto-scaling plans | `buildSubscriptionLifecycle()` reports trial state, renewal cadence, auto-renewal, consortium/coupon/volume discounts, usage ratio, and top-up/upgrade recommendations. |
 | Group permissions and enterprise features | `evaluateEntitlements()` derives feature access such as private projects, institutional admin, and licensing API access. |
 | Secure payment integrations | `buildPaymentIntegrationReadiness()` validates non-secret Stripe, PayPal, or institutional invoice profile metadata and reports missing setup without storing credentials. |
 | AI compute billing | `meterComputeUsage()` aggregates usage events, applies unit rates, subtracts included compute credits, and hashes usage records. |

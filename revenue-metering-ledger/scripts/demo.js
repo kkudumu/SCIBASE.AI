@@ -21,6 +21,7 @@ console.log(
       billableUsage: packet.invoice.usage.billableUsage,
       licensingMonthly: packet.invoice.licensing.monthlyAmount,
       invoiceTotal: packet.invoice.total,
+      subscriptionLifecycle: packet.subscriptionLifecycle,
       entitlements: packet.entitlements,
       reconciliation: packet.reconciliation,
       auditHash: packet.revenueHealth.auditHash,

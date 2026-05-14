@@ -180,6 +180,56 @@ function buildInvoiceSummary(catalogInput, account, usageEvents, topUpPurchases,
   };
 }
 
+function buildSubscriptionLifecycle(catalogInput, account, usage) {
+  const catalog = normalizeCatalog(catalogInput);
+  const plan = selectPlan(catalog, account);
+  const trialEndsAt = account.trialEndsAt || null;
+  const now = account.evaluatedAt || "2026-05-14T00:00:00Z";
+  const inTrial = trialEndsAt ? new Date(now) < new Date(trialEndsAt) : false;
+  const renewalCadence = plan.billingCycle === "annual" ? "annual" : "monthly";
+  const consortiumEligible = Boolean(account.consortiumId || account.couponId || plan.volumeDiscount > 0);
+  const usageRatio = plan.includedComputeCredits
+    ? Number((Number((usage && usage.grossUsage) || 0) / Number(plan.includedComputeCredits || 1)).toFixed(4))
+    : 0;
+  const recommendedTopUp = catalog.topUpPacks
+    .filter((pack) => Number(pack.credits || 0) >= Math.max(0, Number((usage && usage.grossUsage) || 0) - Number(plan.includedComputeCredits || 0)))
+    .sort((left, right) => Number(left.price || 0) - Number(right.price || 0))[0] || null;
+
+  return {
+    accountId: account.id,
+    planId: plan.planId,
+    lifecycleStatus: inTrial ? "trialing" : "active",
+    trial: {
+      startedAt: account.trialStartedAt || null,
+      endsAt: trialEndsAt,
+      active: inTrial,
+      convertsToPlanId: plan.planId,
+    },
+    renewal: {
+      cadence: renewalCadence,
+      nextRenewalAt: account.nextRenewalAt || null,
+      autoRenew: account.autoRenew !== false,
+    },
+    consortiumPricing: {
+      eligible: consortiumEligible,
+      consortiumId: account.consortiumId || null,
+      couponId: account.couponId || null,
+      volumeDiscount: plan.volumeDiscount,
+      annualDiscount: plan.annualDiscount,
+    },
+    autoScaling: {
+      usageRatio,
+      recommendation: usageRatio >= 1.2
+        ? "buy-top-up-or-upgrade-plan"
+        : usageRatio >= 0.8
+          ? "monitor-usage"
+          : "no-change",
+      recommendedTopUpPackId: recommendedTopUp ? recommendedTopUp.id : null,
+    },
+    lifecycleHash: hashRecord({ accountId: account.id, plan, usageRatio, trialEndsAt }),
+  };
+}
+
 function evaluateEntitlements(invoice) {
   const features = new Set(invoice.plan.features);
   return {
@@ -278,8 +328,10 @@ function buildRevenuePacket(catalogInput, account, usageEvents, topUpPurchases, 
   );
   const entitlements = evaluateEntitlements(invoice);
   const reconciliation = reconcileRevenue(invoice, entitlements);
+  const subscriptionLifecycle = buildSubscriptionLifecycle(catalogInput, account, invoice.usage);
   return {
     invoice,
+    subscriptionLifecycle,
     entitlements,
     reconciliation,
     revenueHealth: {
@@ -288,6 +340,7 @@ function buildRevenuePacket(catalogInput, account, usageEvents, topUpPurchases, 
       totalDue: invoice.total,
       auditHash: invoice.auditHash,
       reconciliationStatus: reconciliation.status,
+      lifecycleStatus: subscriptionLifecycle.lifecycleStatus,
     },
   };
 }
@@ -298,6 +351,7 @@ module.exports = {
   buildLicensingExport,
   buildPaymentIntegrationReadiness,
   buildRevenuePacket,
+  buildSubscriptionLifecycle,
   evaluateEntitlements,
   hashRecord,
   meterComputeUsage,

@@ -1,0 +1,12 @@
+{
+  "name": "scibase-collaborative-editor-governance",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deterministic collaborative research editor governance milestone for SCIBASE issue #12.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/editor-governance.js && node --check scripts/demo.js && node --check test/editor-governance.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/editor-governance.test.js"
+  }
+}

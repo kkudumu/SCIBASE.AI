@@ -1,0 +1,93 @@
+{
+  "document": {
+    "id": "doc-flooding-microbiome",
+    "title": "Longitudinal microbiome shifts after coastal flooding",
+    "collaborators": [
+      { "id": "u-1", "name": "Principal investigator", "role": "owner" },
+      { "id": "u-2", "name": "Methods reviewer", "role": "reviewer" },
+      { "id": "u-3", "name": "Data analyst", "role": "editor" }
+    ],
+    "blocks": [
+      {
+        "id": "block-abstract",
+        "sectionId": "abstract",
+        "type": "markdown",
+        "content": "We report longitudinal microbiome shifts after coastal flooding.",
+        "metadata": { "heading": "Abstract" }
+      },
+      {
+        "id": "block-methods",
+        "sectionId": "methods",
+        "type": "markdown",
+        "content": "Samples were collected monthly and sequenced with a documented protocol.",
+        "metadata": { "heading": "Methods" }
+      },
+      {
+        "id": "block-code",
+        "sectionId": "methods",
+        "type": "code",
+        "content": "normalize_counts(samples)",
+        "metadata": { "language": "python" }
+      }
+    ],
+    "comments": [],
+    "suggestions": [],
+    "locks": [
+      { "sectionId": "methods", "ownerId": "u-2", "status": "active" }
+    ],
+    "tasks": [
+      { "id": "task-1", "title": "Attach data dictionary", "assigneeId": "u-3", "status": "open" }
+    ],
+    "presence": [
+      {
+        "userId": "u-1",
+        "name": "Principal investigator",
+        "sectionId": "abstract",
+        "cursorBlockId": "block-abstract",
+        "lastSeenAt": "2026-05-14T07:00:00Z"
+      },
+      {
+        "userId": "u-2",
+        "name": "Methods reviewer",
+        "sectionId": "methods",
+        "cursorBlockId": "block-methods",
+        "lastSeenAt": "2026-05-14T07:00:00Z"
+      }
+    ],
+    "versions": []
+  },
+  "operations": [
+    {
+      "type": "comment",
+      "id": "comment-1",
+      "actorId": "u-2",
+      "blockId": "block-methods",
+      "body": "Please cite the sequencing protocol and include reagent version."
+    },
+    {
+      "type": "suggestion",
+      "id": "suggestion-1",
+      "actorId": "u-2",
+      "blockId": "block-methods",
+      "proposedContent": "Samples were collected monthly and sequenced with protocol v2.1."
+    },
+    {
+      "type": "update-block",
+      "actorId": "u-3",
+      "blockId": "block-methods",
+      "content": "This edit should be rejected while the methods section is locked."
+    },
+    {
+      "type": "insert-block",
+      "actorId": "u-1",
+      "index": 3,
+      "block": {
+        "id": "block-results",
+        "sectionId": "results",
+        "type": "markdown",
+        "content": "Observed diversity increased after flooding and moved toward baseline after remediation.",
+        "metadata": { "heading": "Results" }
+      }
+    }
+  ]
+}

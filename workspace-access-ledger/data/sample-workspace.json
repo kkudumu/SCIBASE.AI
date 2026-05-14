@@ -1,0 +1,123 @@
+{
+  "workspace": {
+    "id": "workspace-atlas",
+    "name": "Microbiome Atlas Lab",
+    "users": [
+      {
+        "id": "u-owner",
+        "email": "owner@example.edu",
+        "name": "Principal Investigator",
+        "institution": "Northstar University",
+        "institutionId": "northstar",
+        "field": "environmental health",
+        "keywords": ["microbiome", "public health"],
+        "profileVisibility": "public",
+        "mfaEnabled": true,
+        "identities": [
+          { "provider": "email", "subject": "owner@example.edu" },
+          { "provider": "orcid", "subject": "0000-0002-1111-2222" },
+          { "provider": "saml", "subject": "northstar:owner" }
+        ]
+      },
+      {
+        "id": "u-reviewer",
+        "email": "reviewer@example.edu",
+        "name": "External Reviewer",
+        "institution": "Open Review Lab",
+        "institutionId": "open-review",
+        "field": "statistics",
+        "keywords": ["reproducibility", "methods"],
+        "profileVisibility": "public",
+        "mfaEnabled": true,
+        "identities": [
+          { "provider": "github", "subject": "reviewer-gh" },
+          { "provider": "orcid", "subject": "0000-0003-3333-4444" }
+        ]
+      },
+      {
+        "id": "u-anon",
+        "email": "anon@example.org",
+        "name": "Anonymous Commenter",
+        "profileVisibility": "private",
+        "anonymousMode": true,
+        "mfaEnabled": false,
+        "identities": [{ "provider": "email", "subject": "anon@example.org" }]
+      }
+    ],
+    "projects": [
+      {
+        "id": "project-private",
+        "title": "Coastal flooding microbiome study",
+        "visibility": "private",
+        "institutionId": "northstar",
+        "members": [
+          { "userId": "u-owner", "role": "owner" },
+          { "userId": "u-reviewer", "role": "reviewer" }
+        ],
+        "policy": {
+          "manuscript": { "read": "viewer", "write": "contributor" },
+          "code": { "read": "reviewer", "write": "contributor" },
+          "dataset": { "read": "admin", "download": "admin" }
+        },
+        "objectRules": [
+          {
+            "objectType": "dataset",
+            "action": "read",
+            "effect": "allow",
+            "userIds": ["u-reviewer"]
+          }
+        ]
+      },
+      {
+        "id": "project-public",
+        "title": "Open protocol notes",
+        "visibility": "public",
+        "members": [{ "userId": "u-owner", "role": "owner" }],
+        "policy": {
+          "manuscript": { "read": "viewer", "write": "contributor" }
+        },
+        "objectRules": []
+      }
+    ],
+    "invitations": [
+      {
+        "id": "invite-1",
+        "email": "collaborator@example.edu",
+        "projectId": "project-private",
+        "role": "contributor",
+        "status": "pending",
+        "readOnly": false,
+        "expiresAt": "2026-05-21T00:00:00Z"
+      }
+    ],
+    "auditLog": [
+      { "id": "audit-1", "actorId": "u-owner", "projectId": "project-private", "action": "project.created" },
+      { "id": "audit-2", "actorId": "u-owner", "projectId": "project-private", "action": "reviewer.invited" }
+    ]
+  },
+  "activityByUser": {
+    "u-owner": {
+      "publications": ["paper-1", "paper-2"],
+      "reviews": ["review-1"],
+      "projects": ["project-private", "project-public"],
+      "downloads": 240,
+      "forks": 8,
+      "endorsements": 12,
+      "reproducibilityScore": 0.91
+    },
+    "u-reviewer": {
+      "publications": ["paper-3"],
+      "reviews": ["review-2", "review-3", "review-4"],
+      "projects": ["project-private"],
+      "downloads": 90,
+      "forks": 3,
+      "endorsements": 7,
+      "reproducibilityScore": 0.87
+    }
+  },
+  "accessRequests": [
+    { "userId": "u-reviewer", "projectId": "project-private", "objectType": "dataset", "action": "read" },
+    { "userId": "u-reviewer", "projectId": "project-private", "objectType": "dataset", "action": "download" },
+    { "userId": "u-anon", "projectId": "project-public", "objectType": "manuscript", "action": "read" }
+  ]
+}

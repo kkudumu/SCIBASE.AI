@@ -1,0 +1,12 @@
+{
+  "name": "scibase-workspace-access-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Identity and project-space access governance module for SCIBASE issue #11.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/access-ledger.js && node --check scripts/demo.js && node --check test/access-ledger.test.js",
+    "demo": "node scripts/demo.js",
+    "test": "node test/access-ledger.test.js"
+  }
+}

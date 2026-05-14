@@ -160,6 +160,8 @@
   "metrics": {
     "researchers": {
       "u-ada": {
+        "previousReputation": 122,
+        "previousTier": "open-science-champion",
         "citations": 34,
         "forks": 8,
         "reproducibilityBadges": 2,
@@ -167,6 +169,8 @@
         "flags": []
       },
       "u-ravi": {
+        "previousReputation": 48,
+        "previousTier": "active-collaborator",
         "citations": 12,
         "forks": 3,
         "reproducibilityBadges": 1,
@@ -174,6 +178,8 @@
         "flags": []
       },
       "u-maya": {
+        "previousReputation": 44,
+        "previousTier": "emerging-contributor",
         "citations": 18,
         "forks": 2,
         "reproducibilityBadges": 0,
@@ -181,5 +187,17 @@
         "flags": [{ "id": "flag-1", "severity": "low", "reason": "late review disclosure" }]
       }
     }
-  }
+  },
+  "appeals": [
+    {
+      "id": "appeal-1",
+      "researcherId": "u-maya",
+      "targetType": "metric-flag",
+      "targetId": "flag-1",
+      "status": "open",
+      "openedAt": "2026-05-05T08:00:00Z",
+      "reviewerGroup": "community-governance",
+      "requestedChange": "Review whether the late disclosure flag should expire after the corrected disclosure was added."
+    }
+  ]
 }

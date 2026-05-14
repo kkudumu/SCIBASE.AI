@@ -80,6 +80,7 @@ function normalizeCommunity(input) {
     comments: asArray(input.comments),
     contributions: asArray(input.contributions),
     endorsements: asArray(input.endorsements),
+    appeals: asArray(input.appeals),
     metrics: input.metrics || {},
   };
 }
@@ -369,6 +370,161 @@ function buildModerationSignals(communityInput) {
   };
 }
 
+function addDays(timestamp, days) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString();
+}
+
+function countWords(value) {
+  return String(value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+function buildReviewQualityAudits(communityInput) {
+  const community = normalizeCommunity(communityInput);
+  return community.reviews.map((reviewInput) => {
+    const review = createPeerReview(reviewInput);
+    const missingScores = Object.entries(review.scores)
+      .filter(([, score]) => score === 0)
+      .map(([criterion]) => criterion);
+    const narrativeWordCount = [
+      review.narrative.summary,
+      ...review.narrative.strengths,
+      ...review.narrative.concerns,
+    ].reduce((sum, entry) => sum + countWords(entry), 0);
+    const missingNarrative = [];
+    if (countWords(review.narrative.summary) < 6) missingNarrative.push("summary");
+    if (review.narrative.strengths.length === 0) missingNarrative.push("strengths");
+    if (review.narrative.concerns.length === 0) missingNarrative.push("concerns");
+
+    const scoreSpread = Number(
+      (Math.max(...Object.values(review.scores)) - Math.min(...Object.values(review.scores))).toFixed(4),
+    );
+    const qualityScore = Math.max(
+      0,
+      100 - missingScores.length * 18 - missingNarrative.length * 14 - (narrativeWordCount < 30 ? 12 : 0),
+    );
+
+    return {
+      reviewId: review.id,
+      projectId: review.projectId,
+      reviewerAlias: review.reviewerAlias,
+      visibility: review.visibility,
+      missingScores,
+      missingNarrative,
+      narrativeWordCount,
+      scoreSpread,
+      qualityScore,
+      status: qualityScore >= 80 ? "accepted" : qualityScore >= 60 ? "needs-editor-check" : "needs-revision",
+      auditHash: hashRecord({ review, missingScores, missingNarrative, narrativeWordCount, qualityScore }),
+    };
+  });
+}
+
+function buildAppealDocket(communityInput) {
+  const community = normalizeCommunity(communityInput);
+  return community.appeals.map((appeal) => ({
+    id: appeal.id || `appeal-${hashRecord(appeal)}`,
+    researcherId: appeal.researcherId,
+    targetType: appeal.targetType || "reputation-score",
+    targetId: appeal.targetId || appeal.researcherId,
+    status: appeal.status || "open",
+    openedAt: appeal.openedAt || null,
+    dueBy: appeal.dueBy || (appeal.openedAt ? addDays(appeal.openedAt, 14) : null),
+    reviewerGroup: appeal.reviewerGroup || "community-governance",
+    requestedChange: appeal.requestedChange || "",
+    evidenceHash: hashRecord({
+      researcherId: appeal.researcherId,
+      targetType: appeal.targetType || "reputation-score",
+      targetId: appeal.targetId || appeal.researcherId,
+      requestedChange: appeal.requestedChange || "",
+      openedAt: appeal.openedAt || null,
+    }),
+  }));
+}
+
+function buildReputationChangeLedger(communityInput) {
+  const community = normalizeCommunity(communityInput);
+  const moderation = buildModerationSignals(community);
+  return community.researchers.map((researcher) => {
+    const score = scoreResearcher(community, researcher.id);
+    const metric = (community.metrics.researchers || {})[researcher.id] || {};
+    const previousTotal = Number(metric.previousReputation || 0);
+    const delta = Number((score.total - previousTotal).toFixed(4));
+    const researcherSignals = moderation.signals.filter((signal) => signal.researcherId === researcher.id);
+    const highRisk = researcherSignals.some((signal) => signal.severity === "high");
+    const largeDelta = Math.abs(delta) >= 35;
+
+    return {
+      researcherId: researcher.id,
+      displayName: score.displayName,
+      previousTotal,
+      currentTotal: score.total,
+      delta,
+      previousTier: metric.previousTier || null,
+      currentTier: score.tier,
+      status: highRisk || largeDelta ? "review-required" : "published",
+      reason: highRisk
+        ? "High-severity moderation signal is attached to this researcher."
+        : largeDelta
+          ? "Large reputation delta requires governance review before promotion surfaces update."
+          : "Transparent score change can be published.",
+      moderationSignalCount: researcherSignals.length,
+      changeHash: hashRecord({ researcherId: researcher.id, components: score.components, previousTotal, delta }),
+    };
+  });
+}
+
+function buildGovernanceReport(communityInput) {
+  const reviewQuality = buildReviewQualityAudits(communityInput);
+  const reputationChanges = buildReputationChangeLedger(communityInput);
+  const appeals = buildAppealDocket(communityInput);
+
+  const requiredActions = [
+    ...reviewQuality
+      .filter((audit) => audit.status !== "accepted")
+      .map((audit) => ({
+        type: "review-quality",
+        severity: audit.status === "needs-revision" ? "high" : "medium",
+        targetId: audit.reviewId,
+        message: "Review needs additional scores or narrative before it should affect reputation.",
+      })),
+    ...reputationChanges
+      .filter((change) => change.status === "review-required")
+      .map((change) => ({
+        type: "reputation-change",
+        severity: "medium",
+        targetId: change.researcherId,
+        message: change.reason,
+      })),
+    ...appeals
+      .filter((appeal) => appeal.status === "open")
+      .map((appeal) => ({
+        type: "appeal",
+        severity: "medium",
+        targetId: appeal.id,
+        message: `Resolve appeal by ${appeal.dueBy || "the governance SLA"}.`,
+      })),
+  ];
+
+  return {
+    status: requiredActions.some((action) => action.severity === "high")
+      ? "blocked"
+      : requiredActions.length
+        ? "needs-governance-review"
+        : "clear",
+    reviewQuality,
+    reputationChanges,
+    appeals,
+    requiredActions,
+    governanceHash: hashRecord({ reviewQuality, reputationChanges, appeals, requiredActions }),
+  };
+}
+
 function buildCommunityReputationPacket(communityInput) {
   const community = normalizeCommunity(communityInput);
   const reviews = community.reviews.map(createPeerReview);
@@ -377,6 +533,7 @@ function buildCommunityReputationPacket(communityInput) {
   const contributorGraph = buildContributorGraph(community);
   const reputationScores = community.researchers.map((researcher) => scoreResearcher(community, researcher.id));
   const moderation = buildModerationSignals(community);
+  const governance = buildGovernanceReport(community);
 
   return {
     reviewTemplates: Object.keys(REVIEW_TEMPLATES).map(selectReviewTemplate),
@@ -391,8 +548,9 @@ function buildCommunityReputationPacket(communityInput) {
       institution: buildLeaderboards(community, "institution"),
     },
     moderation,
+    governance,
     incentiveTiers: ["emerging-contributor", "active-collaborator", "trusted-reviewer", "open-science-champion"],
-    packetHash: hashRecord({ reviews, comments, contributionLedger, reputationScores, moderation }),
+    packetHash: hashRecord({ reviews, comments, contributionLedger, reputationScores, moderation, governance }),
   };
 }
 
@@ -403,8 +561,11 @@ module.exports = {
   buildCommunityReputationPacket,
   buildContributionLedger,
   buildContributorGraph,
+  buildGovernanceReport,
   buildLeaderboards,
   buildModerationSignals,
+  buildReputationChangeLedger,
+  buildReviewQualityAudits,
   createInlineComment,
   createPeerReview,
   hashRecord,

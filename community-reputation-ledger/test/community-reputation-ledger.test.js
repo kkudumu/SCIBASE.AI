@@ -6,8 +6,11 @@ const {
   buildCommunityReputationPacket,
   buildContributionLedger,
   buildContributorGraph,
+  buildGovernanceReport,
   buildLeaderboards,
   buildModerationSignals,
+  buildReputationChangeLedger,
+  buildReviewQualityAudits,
   createInlineComment,
   createPeerReview,
   scoreResearcher,
@@ -84,6 +87,27 @@ function testModerationSignals() {
   assert.ok(risky.moderationHash.length >= 12);
 }
 
+function testGovernanceReport() {
+  const reviewQuality = buildReviewQualityAudits(community);
+  const reputationChanges = buildReputationChangeLedger(community);
+  const governance = buildGovernanceReport(community);
+
+  assert.strictEqual(reviewQuality.length, community.reviews.length);
+  assert.ok(reviewQuality.every((audit) => audit.status === "accepted"));
+  assert.ok(reviewQuality.every((audit) => audit.auditHash.length >= 12));
+
+  const adaChange = reputationChanges.find((change) => change.researcherId === "u-ada");
+  assert.strictEqual(adaChange.previousTotal, 122);
+  assert.strictEqual(adaChange.currentTier, "open-science-champion");
+  assert.strictEqual(adaChange.status, "published");
+  assert.ok(adaChange.changeHash.length >= 12);
+
+  assert.strictEqual(governance.status, "needs-governance-review");
+  assert.strictEqual(governance.appeals[0].dueBy, "2026-05-19T08:00:00.000Z");
+  assert.ok(governance.requiredActions.some((action) => action.type === "appeal"));
+  assert.ok(governance.governanceHash.length >= 12);
+}
+
 function testLeaderboardsAndPacket() {
   const leaderboards = buildLeaderboards(community, "domain");
   const biology = leaderboards.find((leaderboard) => leaderboard.group === "biology");
@@ -93,6 +117,7 @@ function testLeaderboardsAndPacket() {
   assert.strictEqual(packet.reviews.length, community.reviews.length);
   assert.strictEqual(packet.comments.length, community.comments.length);
   assert.strictEqual(packet.moderation.status, "review");
+  assert.strictEqual(packet.governance.status, "needs-governance-review");
   assert.ok(packet.incentiveTiers.includes("trusted-reviewer"));
   assert.ok(packet.packetHash.length >= 12);
 }
@@ -102,6 +127,7 @@ testInlineComments();
 testContributionLedgerAndGraph();
 testTransparentReputationScoring();
 testModerationSignals();
+testGovernanceReport();
 testLeaderboardsAndPacket();
 
 console.log("community-reputation-ledger tests passed");

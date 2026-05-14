@@ -15,6 +15,12 @@ console.log(
       creditedContributions: packet.contributionLedger.length,
       topBiologyResearcher: topDomain.entries[0],
       moderation: packet.moderation,
+      governance: {
+        status: packet.governance.status,
+        requiredActions: packet.governance.requiredActions.length,
+        openAppeals: packet.governance.appeals.filter((appeal) => appeal.status === "open").length,
+        firstAppealDueBy: packet.governance.appeals[0] ? packet.governance.appeals[0].dueBy : null,
+      },
       incentiveTiers: packet.incentiveTiers,
       packetHash: packet.packetHash,
     },

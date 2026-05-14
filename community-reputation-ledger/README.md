@@ -13,6 +13,7 @@ The issue asks for structured peer reviews, inline comments, contributor credit,
 - Git-style contributor graph aggregation by researcher and project.
 - Transparent researcher score components for citations, forks, endorsements, peer review, reproducibility, bounties, contribution credit, and moderation penalties.
 - Moderation signals for self-endorsements, reciprocal endorsements, thin reviews, and flagged researcher metrics.
+- Governance audit for review quality, reputation score changes, open appeals, required actions, and appeal SLA due dates.
 - Leaderboards by domain, region, and institution.
 - Badge and incentive tier assignment for trusted reviewers, reproducibility, challenge completion, and open-science leadership.
 - Sample community fixture, tests, requirement map, CLI demo, and short demo GIF.
@@ -41,6 +42,12 @@ Expected demo shape:
   "moderation": {
     "status": "review"
   },
+  "governance": {
+    "status": "needs-governance-review",
+    "requiredActions": 1,
+    "openAppeals": 1,
+    "firstAppealDueBy": "2026-05-19T08:00:00.000Z"
+  },
   "packetHash": "..."
 }
 ```
@@ -51,7 +58,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/community-reputation-ledger.js` - peer reviews, comments, contribution ledger, contributor graph, reputation scores, leaderboards.
+- `src/community-reputation-ledger.js` - peer reviews, comments, contribution ledger, contributor graph, reputation scores, leaderboards, moderation, and governance audit.
 - `data/sample-community.json` - reviewable community fixture.
 - `test/community-reputation-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

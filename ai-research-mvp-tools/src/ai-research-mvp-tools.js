@@ -268,6 +268,82 @@ function recommendCitations(documentInput, citationCorpus = [], options = {}) {
     .slice(0, options.limit || 5);
 }
 
+function overlapTerms(left, right) {
+  const leftTokens = new Set(tokenize(left));
+  const rightTokens = new Set(tokenize(right));
+  return Array.from(leftTokens).filter((token) => rightTokens.has(token));
+}
+
+function extractClaimSentences(documentInput) {
+  const document = normalizeDocument(documentInput);
+  return splitSentences(document.body)
+    .filter((sentence) => /find|found|result|show|demonstrat|increase|decrease|suggest|associated|significant/i.test(sentence))
+    .map((sentence, index) => ({
+      id: `claim-${index + 1}`,
+      text: sentence,
+      evidenceSpanHash: hashRecord({ documentId: document.id, sentence }),
+    }));
+}
+
+function buildClaimSupportReport(documentInput, citationCorpus = []) {
+  const document = normalizeDocument(documentInput);
+  const existingDois = new Set(document.references.map((reference) => reference.doi).filter(Boolean));
+  const claims = extractClaimSentences(document).map((claim) => {
+    const candidates = asArray(citationCorpus)
+      .map((candidate) => {
+        const terms = overlapTerms(claim.text, `${candidate.title || ""} ${candidate.abstract || ""}`);
+        const score = Number((terms.length * 3 + Math.min(5, Number(candidate.citations || 0) / 40)).toFixed(4));
+        return {
+          id: candidate.id,
+          doi: candidate.doi,
+          title: candidate.title,
+          alreadyCited: existingDois.has(candidate.doi),
+          score,
+          matchedTerms: terms.slice(0, 8),
+          formatted: formatReference(candidate, "apa"),
+        };
+      })
+      .filter((candidate) => candidate.score > 0)
+      .sort((left, right) => right.score - left.score || left.title.localeCompare(right.title));
+    const bestCitation = candidates[0] || null;
+    const supportStatus = bestCitation && bestCitation.alreadyCited
+      ? "supported-by-existing-citation"
+      : bestCitation && bestCitation.score >= 8
+        ? "citation-recommended"
+        : "needs-evidence";
+
+    return {
+      ...claim,
+      supportStatus,
+      bestCitation,
+      candidateCount: candidates.length,
+      action: bestCitation && !bestCitation.alreadyCited
+        ? {
+            type: "insert-supporting-citation",
+            doi: bestCitation.doi,
+            label: bestCitation.formatted,
+          }
+        : supportStatus === "needs-evidence"
+          ? {
+              type: "revise-or-add-evidence",
+              message: "Add a result, citation, or qualifying language before submission.",
+            }
+          : {
+              type: "no-action",
+              message: "Claim is already connected to an existing citation.",
+            },
+    };
+  });
+
+  return {
+    documentId: document.id,
+    claims,
+    unsupportedCount: claims.filter((claim) => claim.supportStatus === "needs-evidence").length,
+    recommendedCitationCount: claims.filter((claim) => claim.supportStatus === "citation-recommended").length,
+    reportHash: hashRecord({ documentId: document.id, claims }),
+  };
+}
+
 function buildSimilarPapersWidget(documentInput, openAccessCorpus = [], citationCorpus = [], limit = 5) {
   const similarityMatches = detectSimilarity(documentInput, openAccessCorpus).map((match) => ({
     source: "open-access-corpus",
@@ -325,6 +401,7 @@ function buildResearchToolsPacket(input) {
   const reviewReport = reviewManuscript(document, { domain: document.domain, openAccessCorpus });
   const citationRecommendations = recommendCitations(document, citationCorpus, { style: "apa", limit: 5 });
   const similarPapersWidget = buildSimilarPapersWidget(document, openAccessCorpus, citationCorpus, 5);
+  const claimSupportReport = buildClaimSupportReport(document, citationCorpus);
 
   return {
     document: {
@@ -336,20 +413,30 @@ function buildResearchToolsPacket(input) {
     reviewReport,
     citationRecommendations,
     similarPapersWidget,
+    claimSupportReport,
     insertActions: citationRecommendations.map((citation) => ({
       action: "insert-citation",
       doi: citation.doi,
       label: citation.formatted,
     })),
-    packetHash: hashRecord({ documentId: document.id, summaries, reviewReport, citationRecommendations, similarPapersWidget }),
+    packetHash: hashRecord({
+      documentId: document.id,
+      summaries,
+      reviewReport,
+      citationRecommendations,
+      similarPapersWidget,
+      claimSupportReport,
+    }),
   };
 }
 
 module.exports = {
   REVIEW_TEMPLATES,
+  buildClaimSupportReport,
   buildSimilarPapersWidget,
   buildResearchToolsPacket,
   detectSimilarity,
+  extractClaimSentences,
   formatReference,
   hashRecord,
   recommendCitations,

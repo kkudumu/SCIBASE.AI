@@ -3,9 +3,11 @@
 const assert = require("assert");
 const sample = require("../data/sample-research.json");
 const {
+  buildClaimSupportReport,
   buildSimilarPapersWidget,
   buildResearchToolsPacket,
   detectSimilarity,
+  extractClaimSentences,
   formatReference,
   recommendCitations,
   reviewManuscript,
@@ -64,6 +66,18 @@ function testSimilarPapersWidget() {
   assert.ok(widget.every((item) => item.action.type));
 }
 
+function testClaimSupportReport() {
+  const claims = extractClaimSentences(sample.document);
+  const report = buildClaimSupportReport(sample.document, sample.citationCorpus);
+
+  assert.ok(claims.length >= 3);
+  assert.strictEqual(report.documentId, sample.document.id);
+  assert.ok(report.claims.every((claim) => claim.evidenceSpanHash.length >= 12));
+  assert.ok(report.claims.some((claim) => claim.supportStatus === "citation-recommended"));
+  assert.ok(report.claims.some((claim) => claim.action.type === "insert-supporting-citation"));
+  assert.ok(report.reportHash.length >= 12);
+}
+
 function testReferenceFormatting() {
   const reference = sample.citationCorpus[0];
 
@@ -78,6 +92,8 @@ function testPacket() {
   assert.deepStrictEqual(Object.keys(packet.summaries), ["abstract", "executive", "layperson"]);
   assert.strictEqual(packet.citationRecommendations.length, packet.insertActions.length);
   assert.ok(packet.similarPapersWidget.length > 0);
+  assert.ok(packet.claimSupportReport.claims.length > 0);
+  assert.ok(packet.claimSupportReport.reportHash.length >= 12);
   assert.ok(packet.reviewReport.reportHash);
   assert.ok(packet.packetHash.length >= 12);
 }
@@ -86,6 +102,7 @@ testSummaries();
 testReviewDiagnostics();
 testSimilarityAndCitations();
 testSimilarPapersWidget();
+testClaimSupportReport();
 testReferenceFormatting();
 testPacket();
 

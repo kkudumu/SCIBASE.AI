@@ -14,6 +14,12 @@ console.log(
       reviewFindings: packet.reviewReport.findings.map((finding) => `${finding.category}:${finding.message}`),
       topCitation: packet.citationRecommendations[0],
       similarPapers: packet.similarPapersWidget,
+      claimSupport: {
+        claims: packet.claimSupportReport.claims.length,
+        unsupportedCount: packet.claimSupportReport.unsupportedCount,
+        recommendedCitationCount: packet.claimSupportReport.recommendedCitationCount,
+        firstAction: packet.claimSupportReport.claims[0] ? packet.claimSupportReport.claims[0].action : null,
+      },
       insertActions: packet.insertActions.length,
       packetHash: packet.packetHash,
     },

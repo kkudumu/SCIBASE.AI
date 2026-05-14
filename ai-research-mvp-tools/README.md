@@ -13,6 +13,7 @@ The issue asks for paper summaries, pre-review diagnostics, and citation assista
 - Similarity signal against a local open-access corpus fixture.
 - Citation recommendations ranked by manuscript keyword overlap, recency, and citation signal.
 - Similar-papers widget combining open-access similarity signals and citation-corpus matches with reasons and actions.
+- Claim-support report that extracts manuscript claim sentences, matches citation evidence, and returns insert-or-revise actions with evidence-span hashes.
 - APA, MLA, and Nature-style reference formatting.
 - One-click citation insert-action metadata.
 - Sample manuscript/corpus fixture, tests, requirement map, CLI demo, and short demo GIF.
@@ -44,6 +45,11 @@ Expected demo shape:
       }
     }
   ],
+  "claimSupport": {
+    "claims": 4,
+    "unsupportedCount": 0,
+    "recommendedCitationCount": 3
+  },
   "insertActions": 2,
   "packetHash": "..."
 }
@@ -55,7 +61,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/ai-research-mvp-tools.js` - summarization, review diagnostics, similarity, citation ranking, formatting.
+- `src/ai-research-mvp-tools.js` - summarization, review diagnostics, similarity, citation ranking, claim support, formatting.
 - `data/sample-research.json` - reviewable manuscript, open-access corpus, and citation corpus fixture.
 - `test/ai-research-mvp-tools.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

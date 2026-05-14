@@ -10,9 +10,10 @@ The issue asks for identity, researcher profiles, scientific workspaces, permiss
 - Identity security review that flags privileged roles without MFA and anonymous users with write-capable access.
 - Researcher profiles with institution, field, keywords, ORCID sync, activity, citation-style metrics, and reputation score.
 - Project-space access evaluation with visibility, RBAC, and object-level rules.
+- Project lifecycle report with workspace components, citation/funding/institution metadata, archive approval, retention dates, and invitation expiry review.
 - External collaborator invitations with role, read-only mode, expiry, and invitation hash.
 - Hashed audit events for project access history.
-- Workspace dashboard with identity coverage, profile metrics, project summary, pending invitations, and access decision counts.
+- Workspace dashboard with identity coverage, profile metrics, project summary, lifecycle status, pending invitations, and access decision counts.
 - Sample workspace fixture, tests, requirement map, CLI demo, and short demo GIF.
 
 ## Run
@@ -37,6 +38,11 @@ Expected demo shape:
   "identitySecurity": {
     "status": "ready"
   },
+  "lifecycle": {
+    "activeProjects": 1,
+    "archivedProjects": 1,
+    "incompleteProjects": 0
+  },
   "allowedCount": 2,
   "deniedCount": 1
 }
@@ -48,7 +54,7 @@ See [docs/demo.gif](docs/demo.gif) for a short visual walkthrough. The SVG sourc
 
 ## Files
 
-- `src/access-ledger.js` - identity, profiles, access policy, invitations, audit, dashboard.
+- `src/access-ledger.js` - identity, profiles, access policy, invitations, project lifecycle, audit, dashboard.
 - `data/sample-workspace.json` - reviewable workspace/project fixture.
 - `test/access-ledger.test.js` - dependency-free Node tests.
 - `scripts/demo.js` - CLI demo.

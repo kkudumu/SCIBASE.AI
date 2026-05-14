@@ -27,6 +27,7 @@ function normalizeWorkspace(workspace) {
     projects: asArray(workspace.projects),
     invitations: asArray(workspace.invitations),
     auditLog: asArray(workspace.auditLog),
+    asOf: workspace.asOf || null,
   };
 }
 
@@ -231,10 +232,87 @@ function appendAuditEvent(workspaceInput, event) {
   };
 }
 
+function addDays(timestamp, days) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString();
+}
+
+function isBefore(left, right) {
+  const leftDate = new Date(left);
+  const rightDate = new Date(right);
+  if (Number.isNaN(leftDate.getTime()) || Number.isNaN(rightDate.getTime())) return false;
+  return leftDate.getTime() < rightDate.getTime();
+}
+
+function buildProjectLifecycleReport(workspaceInput) {
+  const workspace = normalizeWorkspace(workspaceInput);
+  const asOf = workspace.asOf || new Date().toISOString();
+  const projectReports = workspace.projects.map((project) => {
+    const components = {
+      documents: asArray(project.documents).length,
+      code: asArray(project.code).length,
+      datasets: asArray(project.datasets).length,
+      discussions: asArray(project.discussionThreads).length,
+      citations: asArray(project.citations).length,
+      fundingSources: asArray(project.fundingSources).length,
+      institutions: asArray(project.institutions).length,
+    };
+    const requiredComponents = ["documents", "code", "datasets", "discussions", "citations"];
+    const missingComponents = requiredComponents.filter((component) => components[component] === 0);
+    const archiveApproved = workspace.auditLog.some(
+      (event) => event.projectId === project.id && event.action === "project.archive.approved",
+    );
+    const archived = Boolean(project.archivedAt);
+
+    return {
+      projectId: project.id,
+      title: project.title,
+      visibility: project.visibility,
+      lifecycleState: archived ? "archived" : missingComponents.length ? "setup-incomplete" : "active",
+      missingComponents,
+      components,
+      archive: {
+        requestedAt: project.archiveRequestedAt || null,
+        approved: archiveApproved,
+        archivedAt: project.archivedAt || null,
+        retentionUntil: project.archivedAt ? addDays(project.archivedAt, Number(project.retentionDays || 2555)) : null,
+      },
+      managementHash: hashRecord({ projectId: project.id, components, missingComponents, archiveApproved }),
+    };
+  });
+
+  const invitationReview = workspace.invitations.map((invitation) => {
+    const expired = invitation.expiresAt ? isBefore(invitation.expiresAt, asOf) : false;
+    return {
+      invitationId: invitation.id,
+      projectId: invitation.projectId,
+      role: invitation.role || "viewer",
+      status: expired && invitation.status === "pending" ? "expired" : invitation.status || "pending",
+      readOnly: Boolean(invitation.readOnly),
+      expiresAt: invitation.expiresAt || null,
+      risk: expired && invitation.status === "pending" ? "expired-pending-invitation" : null,
+      invitationHash: hashRecord(invitation),
+    };
+  });
+
+  return {
+    asOf,
+    projects: projectReports,
+    invitationReview,
+    activeProjects: projectReports.filter((project) => project.lifecycleState === "active").length,
+    archivedProjects: projectReports.filter((project) => project.lifecycleState === "archived").length,
+    incompleteProjects: projectReports.filter((project) => project.lifecycleState === "setup-incomplete").length,
+    lifecycleHash: hashRecord({ projectReports, invitationReview, asOf }),
+  };
+}
+
 function buildAccessDashboard(workspaceInput, activityByUser) {
   const workspace = normalizeWorkspace(workspaceInput);
   const identities = workspace.users.map(buildUnifiedIdentity);
   const profiles = workspace.users.map((user) => buildResearcherProfile(user, (activityByUser || {})[user.id] || {}));
+  const lifecycle = buildProjectLifecycleReport(workspace);
   const mfaCoverage = identities.length
     ? Number((identities.filter((identity) => identity.mfaEnabled).length / identities.length).toFixed(4))
     : 0;
@@ -257,10 +335,11 @@ function buildAccessDashboard(workspaceInput, activityByUser) {
     },
     profiles,
     projectSummary,
+    lifecycle,
     identitySecurity: buildIdentitySecurityReview(workspace),
     pendingInvitations: workspace.invitations.filter((invitation) => invitation.status === "pending"),
     auditEvents: workspace.auditLog.length,
-    dashboardHash: hashRecord({ identities, profiles, projectSummary, auditLog: workspace.auditLog }),
+    dashboardHash: hashRecord({ identities, profiles, projectSummary, lifecycle, auditLog: workspace.auditLog }),
   };
 }
 
@@ -284,6 +363,7 @@ module.exports = {
   appendAuditEvent,
   buildAccessDashboard,
   buildIdentitySecurityReview,
+  buildProjectLifecycleReport,
   buildResearcherProfile,
   buildUnifiedIdentity,
   buildWorkspaceAccessPacket,

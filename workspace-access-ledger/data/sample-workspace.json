@@ -2,6 +2,7 @@
   "workspace": {
     "id": "workspace-atlas",
     "name": "Microbiome Atlas Lab",
+    "asOf": "2026-05-14T00:00:00Z",
     "users": [
       {
         "id": "u-owner",
@@ -60,6 +61,13 @@
           "code": { "read": "reviewer", "write": "contributor" },
           "dataset": { "read": "admin", "download": "admin" }
         },
+        "documents": ["manuscript.md", "lab-notes.md"],
+        "code": ["analysis/normalize.py"],
+        "datasets": ["data/samples.csv"],
+        "discussionThreads": ["thread-methods", "thread-batch-effects"],
+        "citations": ["doi:10.5555/flood.microbiome"],
+        "fundingSources": ["NSF-OPEN-2026"],
+        "institutions": ["northstar"],
         "objectRules": [
           {
             "objectType": "dataset",
@@ -77,6 +85,16 @@
         "policy": {
           "manuscript": { "read": "viewer", "write": "contributor" }
         },
+        "documents": ["protocol.md"],
+        "code": [],
+        "datasets": [],
+        "discussionThreads": [],
+        "citations": ["doi:10.5555/open.protocol"],
+        "fundingSources": [],
+        "institutions": ["northstar"],
+        "archiveRequestedAt": "2026-05-01T00:00:00Z",
+        "archivedAt": "2026-05-08T00:00:00Z",
+        "retentionDays": 365,
         "objectRules": []
       }
     ],
@@ -89,11 +107,21 @@
         "status": "pending",
         "readOnly": false,
         "expiresAt": "2026-05-21T00:00:00Z"
+      },
+      {
+        "id": "invite-2",
+        "email": "expired@example.edu",
+        "projectId": "project-private",
+        "role": "viewer",
+        "status": "expired",
+        "readOnly": true,
+        "expiresAt": "2026-05-01T00:00:00Z"
       }
     ],
     "auditLog": [
       { "id": "audit-1", "actorId": "u-owner", "projectId": "project-private", "action": "project.created" },
-      { "id": "audit-2", "actorId": "u-owner", "projectId": "project-private", "action": "reviewer.invited" }
+      { "id": "audit-2", "actorId": "u-owner", "projectId": "project-private", "action": "reviewer.invited" },
+      { "id": "audit-3", "actorId": "u-owner", "projectId": "project-public", "action": "project.archive.approved" }
     ]
   },
   "activityByUser": {

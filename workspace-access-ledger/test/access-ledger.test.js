@@ -6,6 +6,7 @@ const {
   appendAuditEvent,
   buildAccessDashboard,
   buildIdentitySecurityReview,
+  buildProjectLifecycleReport,
   buildResearcherProfile,
   buildUnifiedIdentity,
   buildWorkspaceAccessPacket,
@@ -88,9 +89,9 @@ function testInvitationAndAudit() {
     target: "new@example.edu",
   });
 
-  assert.strictEqual(invited.invitations.length, 2);
-  assert.strictEqual(audited.auditLog.length, 3);
-  assert.ok(audited.auditLog[2].eventHash);
+  assert.strictEqual(invited.invitations.length, 3);
+  assert.strictEqual(audited.auditLog.length, 4);
+  assert.ok(audited.auditLog[3].eventHash);
 }
 
 function testIdentitySecurityReview() {
@@ -119,6 +120,23 @@ function testIdentitySecurityReview() {
   assert.ok(risky.findings.some((finding) => finding.type === "privileged-user-without-mfa"));
 }
 
+function testProjectLifecycleReport() {
+  const lifecycle = buildProjectLifecycleReport(sample.workspace);
+  const privateProject = lifecycle.projects.find((project) => project.projectId === "project-private");
+  const publicProject = lifecycle.projects.find((project) => project.projectId === "project-public");
+  const expiredInvite = lifecycle.invitationReview.find((invitation) => invitation.invitationId === "invite-2");
+
+  assert.strictEqual(lifecycle.activeProjects, 1);
+  assert.strictEqual(lifecycle.archivedProjects, 1);
+  assert.strictEqual(privateProject.lifecycleState, "active");
+  assert.deepStrictEqual(privateProject.missingComponents, []);
+  assert.strictEqual(publicProject.lifecycleState, "archived");
+  assert.strictEqual(publicProject.archive.approved, true);
+  assert.strictEqual(publicProject.archive.retentionUntil, "2027-05-08T00:00:00.000Z");
+  assert.strictEqual(expiredInvite.status, "expired");
+  assert.ok(lifecycle.lifecycleHash.length >= 12);
+}
+
 function testDashboard() {
   const dashboard = buildAccessDashboard(sample.workspace, sample.activityByUser);
 
@@ -126,6 +144,7 @@ function testDashboard() {
   assert.strictEqual(dashboard.identitySummary.orcidLinked, 2);
   assert.strictEqual(dashboard.identitySecurity.status, "ready");
   assert.strictEqual(dashboard.pendingInvitations.length, 1);
+  assert.strictEqual(dashboard.lifecycle.activeProjects, 1);
   assert.ok(dashboard.dashboardHash.length >= 12);
 }
 
@@ -146,6 +165,7 @@ testResearcherProfile();
 testAccessDecisions();
 testInvitationAndAudit();
 testIdentitySecurityReview();
+testProjectLifecycleReport();
 testDashboard();
 testFullPacket();
 
